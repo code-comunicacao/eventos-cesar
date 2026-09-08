@@ -43,15 +43,43 @@ const GALLERY_DATA = [
 
 ## 3. Colocar fotos reais na galeria
 
-Hoje a galeria usa placeholders (gradiente + ícone) no lugar de fotos reais — procure por `PLACEHOLDER` em `script.js` (função `initGallery`). Pra usar fotos de verdade:
+Hoje a galeria usa um placeholder ilustrado (gradiente + ícone) no lugar de fotos reais. Pra usar uma foto de verdade, **é só adicionar `src` no item correspondente de `GALLERY_DATA`** (topo de `script.js`) — nenhum outro código precisa mudar:
 
 1. Crie uma pasta `fotos/` no projeto e coloque as imagens lá (ex.: `fotos/2026/confraternizacao.jpg`).
-2. No trecho indicado, troque a `<div class="tile-bg">` por uma tag `<img>` apontando pro arquivo real, com um `alt` descritivo.
-3. Recomendado: exportar as fotos em WebP ou JPG otimizado (a maioria dos editores de imagem faz isso) para o site carregar rápido.
+2. No item da foto em `GALLERY_DATA`, adicione `src: 'fotos/2026/confraternizacao.jpg'`:
+   ```js
+   { year: 2026, title: 'Confraternização de Fim de Ano', month: 'Dezembro', src: 'fotos/2026/confraternizacao.jpg' },
+   ```
+3. Pronto — a foto aparece na grade e na visualização ampliada (lightbox) automaticamente. Itens sem `src` continuam mostrando o placeholder ilustrado normalmente.
+4. Recomendado: exportar as fotos em WebP ou JPG otimizado (a maioria dos editores de imagem faz isso) para o site carregar rápido.
 
 ## 4. Trocar o carrossel de banners
 
-Cada slide é um bloco `<article class="slide">` dentro de `index.html`, na seção `<!-- HERO / CARROSSEL -->`. Copie um bloco existente para adicionar um novo banner, ou edite o texto/data/local dos que já existem. Para usar uma foto de verdade no lugar do ícone ilustrado, troque o conteúdo de `.badge-icon` por uma `<img>`.
+Cada slide é um bloco `<article class="slide">` dentro de `index.html`, na seção `<!-- HERO / CARROSSEL -->`. Copie um bloco existente para adicionar um novo banner, ou edite o texto/data/local dos que já existem.
+
+Os banners são feitos pra receber uma **foto de fundo em tela cheia** (com o texto sobreposto, como referência visual de fotos de pessoas/eventos). Cada slide já vem com uma linha comentada indicando o arquivo — é só descomentar e apontar pro seu arquivo:
+
+```html
+<!-- antes -->
+<article class="slide">
+  <!-- <img class="slide-bg" src="fotos/banners/confraternizacao.jpg" alt="" loading="lazy"> -->
+  <div class="slide-scrim" aria-hidden="true"></div>
+  <div class="slide-copy">...</div>
+</article>
+
+<!-- depois -->
+<article class="slide">
+  <img class="slide-bg" src="fotos/banners/confraternizacao.jpg" alt="" loading="lazy">
+  <div class="slide-scrim" aria-hidden="true"></div>
+  <div class="slide-copy">...</div>
+</article>
+```
+
+- O `alt=""` é proposital: a foto é só ambientação por trás do texto, que já descreve o evento — não precisa de descrição própria.
+- Mantenha a `<div class="slide-scrim">` sempre — é o degradê escuro que garante que o texto continue legível em cima da foto.
+- Slide sem `<img class="slide-bg">` (como estão os 4 de exemplo agora) mostra só o fundo em gradiente — funciona bem como visual provisório até a foto entrar.
+- Fotos com pessoas/ambiente do escritório, tiradas com boa luz, funcionam melhor que fotos muito escuras (o degradê já escurece bastante o lado esquerdo).
+A foto preenche o círculo automaticamente (o CSS já cuida do recorte).
 
 ## 5. Conectar o formulário ao Google Sheets
 
