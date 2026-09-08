@@ -44,14 +44,14 @@ const GALLERY_DATA = [
   { year: 2024, title: 'Tech Talk: Cloud', month: 'Agosto', icon: 'mic' },
   { year: 2024, title: 'Semana da Inovação', month: 'Setembro', icon: 'bulb' },
   { year: 2024, title: 'Workshop de Liderança', month: 'Junho', icon: 'users' },
-  { year: 2025, title: 'Confraternização de Fim de Ano', month: 'Dezembro', icon: 'confetti' },
-  { year: 2025, title: 'Hackathon CESAR', month: 'Outubro', icon: 'trophy' },
-  { year: 2025, title: 'Corrida CESAR', month: 'Novembro', icon: 'runner' },
-  { year: 2025, title: 'Tech Talk: IA Generativa', month: 'Agosto', icon: 'mic' },
-  { year: 2025, title: 'Onboarding Coletivo', month: 'Abril', icon: 'badge' },
-  { year: 2025, title: 'Semana da Inovação', month: 'Setembro', icon: 'bulb' },
-  { year: 2026, title: 'Workshop de Liderança', month: 'Setembro', icon: 'users' },
-  { year: 2026, title: 'Tech Talk: IA aplicada', month: 'Setembro', icon: 'mic' },
+  { year: 2025, title: 'Confraternização de Fim de Ano', month: 'Dezembro', icon: 'confetti', src:'https://img.mailinblue.com/8183049/images/content_library/original/6aa04a34202ac0a13ea31faa.jpg' },
+  { year: 2025, title: 'Hackathon CESAR', month: 'Outubro', icon: 'trophy', src:'https://img.mailinblue.com/8183049/images/content_library/original/6aa0450e6e62f21c34cd490f.jpg' },
+  { year: 2025, title: 'Corrida CESAR', month: 'Novembro', icon: 'runner', src:'https://img.mailinblue.com/8183049/images/content_library/original/6aa04ed3722d1772cec86f4b.jpg' },
+  { year: 2025, title: 'Tech Talk: IA Generativa', month: 'Agosto', icon: 'mic', src:'https://img.mailinblue.com/8183049/images/content_library/original/6aa04f25722d1772cec86f52.jpg' },
+  { year: 2025, title: 'Onboarding Coletivo', month: 'Abril', icon: 'badge', src:'https://img.mailinblue.com/8183049/images/content_library/original/6aa04f4eda5ffecab0488283.png' },
+  { year: 2025, title: 'Semana da Inovação', month: 'Setembro', icon: 'bulb', src:'https://img.mailinblue.com/8183049/images/content_library/original/6aa04f99722d1772cec86f72.jpeg' },
+  { year: 2026, title: 'Workshop de Liderança', month: 'Setembro', icon: 'users', src:'https://img.mailinblue.com/8183049/images/content_library/original/6aa04cc9722d1772cec86ef7.jpeg' },
+  { year: 2026, title: 'A Fronteira não é da Microsoft', month: 'Julho', icon: 'mic', src:'https://img.mailinblue.com/8183049/images/content_library/original/6aa04dbdda5ffecab0488235.png' },
 ];
 
 /* ---------------------------------------------------------
@@ -744,10 +744,32 @@ const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)
       tile.type = 'button';
       tile.className = 'gallery-tile';
       tile.setAttribute('aria-label', `Ver foto: ${photo.title}, ${photo.month} de ${photo.year}`);
-      // PLACEHOLDER visual — troque por <img src="fotos/2026/arquivo.jpg" alt="..."> quando tiver as fotos reais.
-      tile.innerHTML = `
-        <div class="tile-bg" style="background:${tileGradient(photo.title)}">${ICONS[photo.icon] || ICONS.camera}</div>
-        <div class="tile-caption"><strong>${photo.title}</strong><span>${photo.month} · ${photo.year}</span></div>`;
+
+      // Com "src" preenchido em GALLERY_DATA, mostra a foto real; sem "src",
+      // usa o placeholder ilustrado (gradiente + ícone) automaticamente.
+      if (photo.src) {
+        const img = document.createElement('img');
+        img.src = photo.src;
+        img.alt = photo.title;
+        img.loading = 'lazy';
+        tile.appendChild(img);
+      } else {
+        const bg = document.createElement('div');
+        bg.className = 'tile-bg';
+        bg.style.background = tileGradient(photo.title);
+        bg.innerHTML = ICONS[photo.icon] || ICONS.camera; // ícones fixos do próprio site, não é dado externo
+        tile.appendChild(bg);
+      }
+
+      const caption = document.createElement('div');
+      caption.className = 'tile-caption';
+      const strong = document.createElement('strong');
+      strong.textContent = photo.title;
+      const span = document.createElement('span');
+      span.textContent = `${photo.month} · ${photo.year}`;
+      caption.append(strong, span);
+      tile.appendChild(caption);
+
       tile.addEventListener('click', () => openLightbox(i));
       grid.appendChild(tile);
     });
@@ -762,7 +784,7 @@ const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)
 
   // Lightbox
   const lightbox = document.getElementById('galleryLightbox');
-  const lbVisual = document.getElementById('lightboxVisual');
+  const lbVisual = document.getElementById('lightboxVisualInner');
   const lbTitle = document.getElementById('lightboxTitle');
   const lbMeta = document.getElementById('lightboxMeta');
   const lbPrev = document.getElementById('lightboxPrev');
@@ -771,8 +793,17 @@ const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)
 
   function renderLightbox() {
     const photo = activeItems[lightboxIndex];
-    lbVisual.style.background = tileGradient(photo.title);
-    lbVisual.innerHTML = ICONS[photo.icon] || ICONS.camera;
+    lbVisual.innerHTML = '';
+    if (photo.src) {
+      lbVisual.style.background = 'none';
+      const img = document.createElement('img');
+      img.src = photo.src;
+      img.alt = photo.title;
+      lbVisual.appendChild(img);
+    } else {
+      lbVisual.style.background = tileGradient(photo.title);
+      lbVisual.innerHTML = ICONS[photo.icon] || ICONS.camera; // ícones fixos do site, não é dado externo
+    }
     lbTitle.textContent = photo.title;
     lbMeta.textContent = `${photo.month} de ${photo.year}`;
   }
