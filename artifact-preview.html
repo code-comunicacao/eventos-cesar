@@ -449,13 +449,13 @@ section { position: relative; scroll-margin-top: 96px; }
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: linear-gradient(90deg, rgba(10, 9, 8, 0.95) 0%, rgba(10, 9, 8, 0.88) 32%, rgba(10, 9, 8, 0.42) 62%, rgba(10, 9, 8, 0.1) 88%);
+  background: linear-gradient(90deg, rgba(10, 9, 8, 0.95) 0%, rgba(10, 9, 8, 0.9) 38%, rgba(10, 9, 8, 0.48) 70%, rgba(10, 9, 8, 0.12) 92%);
 }
 
 .slide-copy {
   position: relative;
   z-index: 2;
-  max-width: 480px;
+  max-width: 640px;
   padding: var(--space-8);
 }
 @media (min-width: 700px) { .slide-copy { padding: var(--space-12); } }
@@ -742,6 +742,29 @@ section { position: relative; scroll-margin-top: 96px; }
 .chart-card-head { margin-bottom: var(--space-6); }
 .chart-card-head h3 { font-size: 15px; font-weight: 700; color: var(--off-white); margin-bottom: 2px; }
 .chart-card-sub { font-size: 12px; color: var(--off-white-dim); }
+
+/* ---------- Política de Eventos ---------- */
+.policy-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+}
+@media (min-width: 640px) { .policy-grid { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1100px) { .policy-grid { grid-template-columns: repeat(4, 1fr); } }
+.policy-card h3 { font-size: 17px; font-weight: 700; color: var(--off-white); margin-bottom: var(--space-3); }
+.policy-card p { font-size: 13.5px; color: var(--off-white-dim); margin-bottom: var(--space-4); }
+.policy-lead {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--amber);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.policy-footnote { font-size: 13.5px; color: var(--off-white-dim); text-align: center; max-width: 70ch; margin-inline: auto; }
+.policy-footnote a { color: var(--orange); font-weight: 600; }
+.policy-footnote a:hover { color: var(--amber); }
 
 /* eventos por mês — colunas verticais, uma única cor (série única) */
 .bar-chart { display: flex; align-items: flex-end; gap: 2px; overflow-x: auto; padding-bottom: 2px; }
@@ -1131,6 +1154,7 @@ section { position: relative; scroll-margin-top: 96px; }
       <a href="#galeria">Galeria</a>
       <a href="#contato">Contato</a>
       <a href="#painel">Painel</a>
+      <a href="#politica">Política</a>
     </nav>
 
     <div style="display:flex; align-items:center; gap:12px;">
@@ -1156,6 +1180,7 @@ section { position: relative; scroll-margin-top: 96px; }
     <a href="#galeria">Galeria</a>
     <a href="#contato">Contato</a>
     <a href="#painel">Painel</a>
+    <a href="#politica">Política</a>
   </nav>
   <button class="btn btn-primary btn-block" type="button" data-open-request-form>Solicitar evento</button>
 </div>
@@ -1476,6 +1501,48 @@ section { position: relative; scroll-margin-top: 96px; }
   </div>
 </section>
 
+<!-- ============================= POLÍTICA DE EVENTOS ============================= -->
+<section class="surface-section" id="politica">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Documento interno</p>
+        <h2>Política de Eventos</h2>
+        <p>Antes de organizar algo, identifique a categoria da sua iniciativa e siga o caminho indicado — evita atrasos, retrabalho e pedidos de última hora.</p>
+      </div>
+      <a class="btn btn-primary" href="documentos/Politica_Eventos_CESAR.pdf" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+        Abrir PDF completo
+      </a>
+    </div>
+
+    <div class="policy-grid">
+      <div class="chart-card policy-card">
+        <h3>Evento</h3>
+        <p>Tem público definido, intenção estratégica clara e representa o CESAR para além do seu time.</p>
+        <span class="policy-lead">Antecedência: 30 dias (60–90 se for grande porte)</span>
+      </div>
+      <div class="chart-card policy-card">
+        <h3>Iniciativa espontânea</h3>
+        <p>Acontece de maneira orgânica, dentro do seu time, sem representar o CESAR institucionalmente.</p>
+        <span class="policy-lead">Não precisa acionar a área de Eventos</span>
+      </div>
+      <div class="chart-card policy-card">
+        <h3>Ritual</h3>
+        <p>Encontro recorrente, com formato já consolidado, que fortalece a cultura e os vínculos do CESAR.</p>
+        <span class="policy-lead">Antecedência: 15–30 dias, se precisar de apoio</span>
+      </div>
+      <div class="chart-card policy-card">
+        <h3>Ação de endomarketing</h3>
+        <p>Ativação pro público interno, geralmente ligada a uma data do calendário.</p>
+        <span class="policy-lead">Antecedência mínima: 15 dias</span>
+      </div>
+    </div>
+
+    <p class="policy-footnote">Ainda não tem certeza da categoria? Fale com a Área de Eventos antes de começar a organizar — <a href="mailto:eventos@cesar.org.br">eventos@cesar.org.br</a> — ou <a href="documentos/Politica_Eventos_CESAR.pdf" target="_blank" rel="noopener">baixe o PDF completo</a> pra ver exemplos, prazos e o guia rápido de decisão.</p>
+  </div>
+</section>
+
 </main>
 
 <!-- ============================= FOOTER ============================= -->
@@ -1497,6 +1564,7 @@ section { position: relative; scroll-margin-top: 96px; }
           <li><a href="#calendario">Calendário</a></li>
           <li><a href="#galeria">Galeria</a></li>
           <li><a href="#painel">Painel</a></li>
+          <li><a href="#politica">Política de Eventos</a></li>
         </ul>
       </div>
       <div class="footer-col">

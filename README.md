@@ -1,6 +1,6 @@
 # Eventos CESAR
 
-Site institucional de página única para divulgar os eventos internos da empresa: carrossel de banners, calendário de eventos agendados, painel de indicadores em tempo real, galeria de fotos por ano e formulário de solicitação de evento.
+Site institucional de página única para divulgar os eventos internos da empresa: carrossel de banners, calendário de eventos agendados, painel de indicadores em tempo real, galeria de fotos por ano, formulário de solicitação de evento e a Política de Eventos (PDF).
 
 Feito em HTML/CSS/JS puro — sem build, sem dependências. Basta hospedar os arquivos em qualquer servidor estático (GitHub Pages, Netlify, Vercel, S3, servidor interno da empresa etc.).
 
@@ -11,9 +11,17 @@ index.html                → estrutura da página (use este pra publicar o site
 styles.css                → todo o visual (cores, tipografia, layout, responsivo)
 script.js                 → carrossel, calendário, galeria, formulário
 apps-script/Code.gs       → backend (Google Apps Script) que grava as solicitações no Google Sheets
+documentos/                → PDFs linkados no site (ex.: Política de Eventos)
 artifact-preview.html     → versão única e autocontida (CSS/JS/fontes embutidos) só pra visualizar rápido, offline, sem precisar de servidor — não é o arquivo pra publicar
 README.md                 → este arquivo
 ```
+
+## Trocar/atualizar a Política de Eventos
+
+A seção **#politica** linka direto pro arquivo `documentos/Politica_Eventos_CESAR.pdf`. Pra atualizar:
+
+1. Substitua o arquivo em `documentos/` mantendo o mesmo nome (ou troque o nome e ajuste os dois links em `index.html`, na seção `<!-- POLÍTICA DE EVENTOS -->` — um no botão "Abrir PDF completo" e outro no rodapé da seção).
+2. Se as categorias/prazos do resumo em cards mudarem, edite o texto direto nos 4 blocos `.policy-card` da mesma seção.
 
 ## 1. Ver o site localmente
 
