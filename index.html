@@ -217,6 +217,8 @@
       </div>
     </div>
 
+    <div class="panel-notice" id="calendarNotice" role="status"></div>
+
     <div class="calendar-layout">
       <div class="calendar-card">
         <div class="calendar-head">
@@ -308,7 +310,7 @@
       <div>
         <p class="eyebrow">Dados em tempo real</p>
         <h2>Painel de indicadores</h2>
-        <p>Um retrato de como os eventos internos estão acontecendo, calculado a partir das solicitações recebidas pelo formulário.</p>
+        <p>Um retrato de como os eventos internos estão acontecendo, calculado a partir da planilha de eventos do CESAR.</p>
       </div>
       <button class="section-link" id="panelRefresh" type="button">
         <svg id="panelRefreshIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11A8 8 0 105.3 6.3M20 11V5M20 11h-6"/></svg>
@@ -320,53 +322,53 @@
 
     <div class="stat-grid" id="statGrid" aria-live="polite">
       <div class="stat-tile">
-        <span class="stat-label">Pessoas por evento</span>
-        <span class="stat-value" id="statAvgGuests">—</span>
-        <span class="stat-caption" id="statAvgGuestsCaption">carregando…</span>
+        <span class="stat-label">Total de eventos</span>
+        <span class="stat-value" id="statTotal">—</span>
+        <span class="stat-caption" id="statTotalCaption">carregando…</span>
       </div>
       <div class="stat-tile">
-        <span class="stat-label">Prazo até o evento</span>
-        <span class="stat-value" id="statLeadTime">—</span>
-        <span class="stat-caption" id="statLeadTimeCaption">carregando…</span>
+        <span class="stat-label">Confirmados</span>
+        <span class="stat-value" id="statConfirmados">—</span>
+        <span class="stat-caption" id="statConfirmadosCaption">carregando…</span>
       </div>
       <div class="stat-tile">
-        <span class="stat-label">Com coffee break</span>
-        <span class="stat-value" id="statCoffee">—</span>
-        <span class="stat-caption" id="statCoffeeCaption">carregando…</span>
+        <span class="stat-label">Estratégicos</span>
+        <span class="stat-value" id="statEstrategicos">—</span>
+        <span class="stat-caption" id="statEstrategicosCaption">carregando…</span>
       </div>
       <div class="stat-tile">
-        <span class="stat-label">Solicitados pela Diretoria</span>
+        <span class="stat-label">Ligados à Diretoria</span>
         <span class="stat-value" id="statDiretoria">—</span>
         <span class="stat-caption" id="statDiretoriaCaption">carregando…</span>
       </div>
       <div class="stat-tile">
-        <span class="stat-label">Orçamento médio</span>
-        <span class="stat-value" id="statBudget">—</span>
-        <span class="stat-caption" id="statBudgetCaption">carregando…</span>
+        <span class="stat-label">Esforço alto</span>
+        <span class="stat-value" id="statEsforco">—</span>
+        <span class="stat-caption" id="statEsforcoCaption">carregando…</span>
       </div>
     </div>
 
     <div class="panel-charts">
       <div class="chart-card chart-card-wide">
         <div class="chart-card-head">
-          <h3>Eventos solicitados por mês</h3>
-          <span class="chart-card-sub">Pela data desejada de cada solicitação</span>
+          <h3>Eventos por mês</h3>
+          <span class="chart-card-sub">Pela data de início de cada evento</span>
         </div>
         <div class="bar-chart" id="monthBarChart"></div>
       </div>
 
       <div class="chart-card">
         <div class="chart-card-head">
-          <h3>Salas mais reservadas</h3>
-          <span class="chart-card-sub">Top 5 por nº de solicitações</span>
+          <h3>Locais mais usados</h3>
+          <span class="chart-card-sub">Top 5 por nº de eventos</span>
         </div>
         <div class="rank-list" id="roomsRankList" role="list"></div>
       </div>
 
       <div class="chart-card">
         <div class="chart-card-head">
-          <h3>Setores que mais solicitam</h3>
-          <span class="chart-card-sub">Top 5 por nº de solicitações</span>
+          <h3>Categorias mais frequentes</h3>
+          <span class="chart-card-sub">Top 5 por nº de eventos</span>
         </div>
         <div class="rank-list" id="deptsRankList" role="list"></div>
       </div>
@@ -456,157 +458,6 @@
     </div>
   </div>
 </footer>
-
-<!-- ============================= MODAL: SOLICITAR EVENTO ============================= -->
-<dialog class="form-dialog" id="requestDialog" aria-labelledby="requestTitle">
-  <div class="form-scroll">
-
-    <div class="form-body" id="formBody">
-      <div class="form-head">
-        <div>
-          <h2 id="requestTitle">Solicitar um evento</h2>
-          <p>Conte os detalhes do que você imagina. Nossa equipe analisa e entra em contato por e-mail.</p>
-        </div>
-        <button class="icon-btn form-close" id="requestClose" type="button" aria-label="Fechar formulário">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
-        </button>
-      </div>
-
-      <form id="requestForm" novalidate>
-        <div class="field-grid two-col">
-          <div class="field">
-            <label for="fieldName">Nome completo <span class="req">*</span></label>
-            <input id="fieldName" name="fieldName" type="text" autocomplete="name" required data-required data-error-message="Informe seu nome completo.">
-            <span class="field-error" aria-live="polite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span></span></span>
-          </div>
-          <div class="field">
-            <label for="fieldEmail">E-mail corporativo <span class="req">*</span></label>
-            <input id="fieldEmail" name="fieldEmail" type="email" autocomplete="email" spellcheck="false" required data-required data-error-message="Informe um e-mail válido.">
-            <span class="field-error" aria-live="polite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span></span></span>
-          </div>
-        </div>
-
-        <div class="field-grid two-col">
-          <div class="field">
-            <label for="fieldDept">Departamento / setor <span class="req">*</span></label>
-            <select id="fieldDept" name="fieldDept" required data-required data-error-message="Selecione seu departamento.">
-              <option value="">Selecione</option>
-              <option>Marketing</option>
-              <option>Recursos Humanos</option>
-              <option>Tecnologia</option>
-              <option>Comercial</option>
-              <option>Operações</option>
-              <option>Diretoria</option>
-              <option>Outro</option>
-            </select>
-            <span class="field-error" aria-live="polite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span></span></span>
-          </div>
-          <div class="field">
-            <label for="fieldType">Tipo de evento <span class="req">*</span></label>
-            <select id="fieldType" name="fieldType" required data-required data-error-message="Selecione o tipo de evento.">
-              <option value="">Selecione</option>
-              <option>Treinamento</option>
-              <option>Confraternização</option>
-              <option>Workshop</option>
-              <option>Palestra</option>
-              <option>Reunião externa</option>
-              <option>Lançamento</option>
-              <option>Outro</option>
-            </select>
-            <span class="field-error" aria-live="polite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span></span></span>
-          </div>
-        </div>
-
-        <div class="field-grid two-col">
-          <div class="field">
-            <label for="fieldDate">Data desejada <span class="req">*</span></label>
-            <input id="fieldDate" name="fieldDate" type="date" required data-required data-error-message="Escolha uma data.">
-            <span class="field-error" aria-live="polite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span></span></span>
-          </div>
-          <div class="field">
-            <label for="fieldGuests">Nº estimado de convidados <span class="req">*</span></label>
-            <input id="fieldGuests" name="fieldGuests" type="number" min="1" inputmode="numeric" required data-required data-error-message="Informe uma estimativa de convidados.">
-            <span class="field-error" aria-live="polite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span></span></span>
-          </div>
-        </div>
-
-        <div class="field-grid two-col">
-          <div class="field">
-            <label for="fieldLocation">Local / sala desejada</label>
-            <select id="fieldLocation" name="fieldLocation">
-              <option value="">A definir</option>
-              <option>Auditório Principal</option>
-              <option>Sala Multiuso 1</option>
-              <option>Sala Multiuso 2</option>
-              <option>Espaço Inovação</option>
-              <option>Terraço</option>
-              <option>Espaço externo</option>
-              <option>Outro</option>
-            </select>
-            <span class="hint">Opcional — se não souber, deixe em "A definir".</span>
-          </div>
-          <div class="field">
-            <label for="fieldBudget">Orçamento estimado (R$)</label>
-            <input id="fieldBudget" name="fieldBudget" type="number" min="0" step="50" inputmode="decimal" placeholder="5000">
-            <span class="hint">Opcional — um valor aproximado já ajuda. Usado só pra calcular a média no painel de indicadores.</span>
-          </div>
-        </div>
-
-        <div class="field-grid">
-          <div class="field field-checkbox">
-            <input id="fieldCoffeeBreak" name="fieldCoffeeBreak" type="checkbox">
-            <label for="fieldCoffeeBreak">Este evento vai contar com coffee break</label>
-          </div>
-        </div>
-
-        <div class="field-grid">
-          <div class="field">
-            <label for="fieldDescription">Descrição e objetivo do evento <span class="req">*</span></label>
-            <textarea id="fieldDescription" name="fieldDescription" required data-required data-error-message="Descreva o objetivo do evento."></textarea>
-            <span class="field-error" aria-live="polite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span></span></span>
-          </div>
-        </div>
-
-        <div class="field-grid">
-          <div class="field">
-            <label for="fieldAttachment">Anexo (opcional)</label>
-            <label class="file-drop" id="fileDropZone" tabindex="0">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
-              <span class="file-drop-text"><strong>Clique para anexar</strong> uma proposta, briefing ou referência (PDF, imagem ou documento — até 5MB)</span>
-              <input id="fieldAttachment" name="fieldAttachment" type="file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg">
-            </label>
-            <span class="file-name-chip" id="fileNameChip">
-              <span></span>
-              <button type="button" id="fileRemove" aria-label="Remover anexo">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
-              </button>
-            </span>
-          </div>
-        </div>
-
-        <div class="form-footer">
-          <button class="btn btn-primary btn-block" type="submit" id="requestSubmit">
-            <span class="spinner" aria-hidden="true"></span>
-            <span class="btn-label">Enviar solicitação</span>
-          </button>
-          <span class="hint">Campos com <span class="req">*</span> são obrigatórios. Você receberá uma confirmação por e-mail.</span>
-        </div>
-
-        <div class="form-status" id="formStatus" role="alert" aria-live="assertive"></div>
-      </form>
-    </div>
-
-    <div class="form-success-view" id="formSuccessView">
-      <div class="icon-wrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-      <h3>Solicitação enviada!</h3>
-      <p>Recebemos os detalhes do seu evento. Nossa equipe entra em contato em breve pelo e-mail informado.</p>
-      <button class="btn btn-light" type="button" id="formSuccessClose">Fechar</button>
-    </div>
-
-  </div>
-</dialog>
 
 <script src="script.js"></script>
 </body>

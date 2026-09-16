@@ -7,28 +7,36 @@
    ============================================================ */
 
 /* ---------------------------------------------------------
-   CONFIG — cole aqui a URL do seu Web App do Google Apps
-   Script depois de publicá-lo (veja apps-script/Code.gs e
-   o README.md para o passo a passo).
+   CONFIG
+   - EVENTS_SHEET_URL: endpoint público (com CORS liberado) da planilha "EVENTOS
+     CESAR" no Google Sheets — é a fonte real do Calendário e do
+     Painel de Indicadores. Qualquer linha nova lá aparece aqui
+     sozinha, sem precisar tocar em código (veja o README.md).
+   - EVENT_REQUEST_URL: link do formulário de solicitação de evento
+     (Zeev). O botão "Solicitar evento" abre esse link numa janela
+     própria — não é mais um formulário deste site.
 --------------------------------------------------------- */
 const CONFIG = {
-  APPS_SCRIPT_URL: 'COLE_AQUI_A_URL_DO_SEU_APPS_SCRIPT',
-  MAX_FILE_MB: 5,
+  EVENTS_SHEET_URL: 'https://docs.google.com/spreadsheets/d/1qxzUKS4H0tP7xTH0F5OLUwMTfJXBkupujzhf2n4j46I/gviz/tq?tqx=out:csv&gid=0',
+  EVENT_REQUEST_URL: 'https://cesar.zeev.it//2.0/request?c=z34UUIKyt81F3TftVanANkiUcqQWLV46HyMvdEsOlstl8NMS7TfL7oNKHHs2LfR0zbRkB1bXwVbHHZaqh7OfYw%3d%3d#top',
+  EVENTS_REFRESH_MS: 5 * 60 * 1000,
 };
 
 /* ---------------------------------------------------------
-   DADOS — troque pelos eventos e fotos reais da empresa.
-   Datas no formato 'AAAA-MM-DD'.
+   DADOS DE EXEMPLO — usados só se a planilha não puder ser lida
+   (sem internet, link mudou, planilha ficou privada etc.). O
+   Calendário e o Painel avisam claramente na tela quando isso
+   acontece. Formato de cada evento, igual ao que vem da planilha:
+   { id, date (AAAA-MM-DD), endDate, time, title, category, status,
+     cluster, esforco, estrategico, location, venue, description }
 --------------------------------------------------------- */
-const EVENTS_DATA = [
-  { id: 'e1', date: '2026-09-10', time: '14:00', title: 'Workshop de Liderança', category: 'Treinamento', location: 'Sala Multiuso 2', description: 'Sessão prática sobre gestão de times e feedback contínuo.' },
-  { id: 'e2', date: '2026-09-25', time: '17:30', title: 'Tech Talk: IA aplicada ao dia a dia', category: 'Palestra', location: 'Auditório Principal', description: 'Bate-papo aberto sobre uso prático de IA nos projetos internos.' },
-  { id: 'e3', date: '2026-10-08', time: '09:00', title: 'Hackathon CESAR', category: 'Hackathon', location: 'Espaço Inovação', description: '48h de criação em equipe, com mentoria e premiação.' },
-  { id: 'e4', date: '2026-10-08', time: '19:00', title: 'Happy Hour de Encerramento', category: 'Confraternização', location: 'Terraço', description: 'Celebração de encerramento do Hackathon CESAR.' },
-  { id: 'e5', date: '2026-11-14', time: '07:00', title: 'Corrida CESAR', category: 'Integração', location: 'Parque da Jaqueira', description: 'Corrida de 5km aberta a todos os colaboradores e familiares.' },
-  { id: 'e6', date: '2026-11-27', time: '10:00', title: 'Onboarding de Novos Times', category: 'Treinamento', location: 'Sala Multiuso 1', description: 'Apresentação institucional para colaboradores recém-chegados.' },
-  { id: 'e7', date: '2026-12-15', time: '19:00', title: 'Confraternização de Fim de Ano', category: 'Confraternização', location: 'Auditório Principal', description: 'Jantar, música ao vivo e premiações para fechar o ano.' },
-  { id: 'e8', date: '2027-01-22', time: '15:00', title: 'Planejamento Estratégico 2027', category: 'Reunião', location: 'Sala Multiuso 2', description: 'Kickoff das metas e prioridades do novo ano.' },
+const EVENTS_DEMO_DATA = [
+  { id: 'demo1', date: '2026-09-24', endDate: '2026-09-24', time: '14:00', title: 'Workshop de Liderança', category: 'Evento', status: 'Confirmado', cluster: 'C4', esforco: 'Médio', estrategico: false, location: 'CESAR Moinho — Risoflora', venue: 'CESAR Moinho', description: 'Público: Colaboadores' },
+  { id: 'demo2', date: '2026-10-01', endDate: '2026-10-01', time: '17:30', title: 'Tech Talk: IA aplicada ao dia a dia', category: 'Palestra', status: 'Confirmado', cluster: 'C4', esforco: 'Baixo', estrategico: false, location: 'CESAR School - Prédio Apolo', venue: 'CESAR School - Prédio Apolo', description: 'Público: Interno + Cliente' },
+  { id: 'demo3', date: '2026-10-08', endDate: '2026-10-10', time: '09:00', title: 'Hackathon CESAR', category: 'Hackaton', status: 'Confirmado', cluster: 'C4', esforco: 'Alto', estrategico: true, location: 'CESAR School - Prédio Tiradentes', venue: 'CESAR School - Prédio Tiradentes', description: 'Público: Alunos' },
+  { id: 'demo4', date: '2026-11-14', endDate: '2026-11-14', time: '07:00', title: 'Corrida CESAR', category: 'Evento', status: 'Previsto', cluster: 'Institucional', esforco: 'Médio', estrategico: true, location: 'CESAR Moinho', venue: 'CESAR Moinho', description: 'Público: Todos' },
+  { id: 'demo5', date: '2026-11-27', endDate: '2026-11-27', time: '10:00', title: 'Onboarding de Novos Times', category: 'Evento', status: 'Previsto', cluster: '', esforco: 'Baixo', estrategico: false, location: 'CESAR Moinho — Cartola', venue: 'CESAR Moinho', description: 'Público: Colaboadores' },
+  { id: 'demo6', date: '2026-12-15', endDate: '2026-12-15', time: '19:00', title: 'Confraternização de Fim de Ano', category: 'Evento', status: 'Previsto', cluster: 'Board', esforco: 'Alto', estrategico: true, location: 'CESAR Moinho', venue: 'CESAR Moinho', description: 'Público: Colaboadores' },
 ];
 
 const GALLERY_DATA = [
@@ -52,45 +60,6 @@ const GALLERY_DATA = [
   { year: 2025, title: 'Semana da Inovação', month: 'Setembro', icon: 'bulb', src:'https://img.mailinblue.com/8183049/images/content_library/original/6aa04f99722d1772cec86f72.jpeg' },
   { year: 2026, title: 'Workshop de Liderança', month: 'Setembro', icon: 'users', src:'https://img.mailinblue.com/8183049/images/content_library/original/6aa04cc9722d1772cec86ef7.jpeg' },
   { year: 2026, title: 'A Fronteira não é da Microsoft', month: 'Julho', icon: 'mic', src:'https://img.mailinblue.com/8183049/images/content_library/original/6aa04dbdda5ffecab0488235.png' },
-];
-
-/* ---------------------------------------------------------
-   PAINEL DE INDICADORES — dados de exemplo (fallback).
-   Usados só enquanto CONFIG.APPS_SCRIPT_URL não está configurada,
-   ou se a leitura em tempo real falhar. Formato idêntico ao que o
-   Code.gs devolve no GET (uma linha por solicitação recebida).
---------------------------------------------------------- */
-const DASHBOARD_DEMO_DATA = [
-  { departamento: 'Recursos Humanos', dataDesejada: '2026-01-14', enviadoEm: '2025-12-10T09:00:00.000Z', local: 'Auditório Principal', convidados: 80, orcamento: 4200, coffeeBreak: true },
-  { departamento: 'Tecnologia', dataDesejada: '2026-01-22', enviadoEm: '2026-01-02T09:00:00.000Z', local: 'Sala Multiuso 1', convidados: 25, orcamento: 1200, coffeeBreak: false },
-  { departamento: 'Comercial', dataDesejada: '2026-02-05', enviadoEm: '2026-01-11T09:00:00.000Z', local: 'Sala Multiuso 2', convidados: 40, orcamento: 2800, coffeeBreak: true },
-  { departamento: 'Marketing', dataDesejada: '2026-02-19', enviadoEm: '2026-01-10T09:00:00.000Z', local: 'Auditório Principal', convidados: 60, orcamento: 3500, coffeeBreak: true },
-  { departamento: 'Tecnologia', dataDesejada: '2026-03-04', enviadoEm: '2026-02-17T09:00:00.000Z', local: 'Espaço Inovação', convidados: 30, orcamento: 1800, coffeeBreak: false },
-  { departamento: 'Operações', dataDesejada: '2026-03-11', enviadoEm: '2026-03-01T09:00:00.000Z', local: 'Sala Multiuso 1', convidados: 20, orcamento: 900, coffeeBreak: false },
-  { departamento: 'Diretoria', dataDesejada: '2026-03-26', enviadoEm: '2026-02-04T09:00:00.000Z', local: 'Auditório Principal', convidados: 45, orcamento: 6000, coffeeBreak: true },
-  { departamento: 'Recursos Humanos', dataDesejada: '2026-04-08', enviadoEm: '2026-03-17T09:00:00.000Z', local: 'Sala Multiuso 2', convidados: 35, orcamento: 2000, coffeeBreak: true },
-  { departamento: 'Tecnologia', dataDesejada: '2026-04-23', enviadoEm: '2026-03-24T09:00:00.000Z', local: 'Espaço Inovação', convidados: 50, orcamento: 3000, coffeeBreak: true },
-  { departamento: 'Comercial', dataDesejada: '2026-05-06', enviadoEm: '2026-04-18T09:00:00.000Z', local: 'Terraço', convidados: 28, orcamento: 1600, coffeeBreak: false },
-  { departamento: 'Marketing', dataDesejada: '2026-05-15', enviadoEm: '2026-03-31T09:00:00.000Z', local: 'Auditório Principal', convidados: 90, orcamento: 5200, coffeeBreak: true },
-  { departamento: 'Tecnologia', dataDesejada: '2026-05-27', enviadoEm: '2026-05-15T09:00:00.000Z', local: 'Sala Multiuso 1', convidados: 18, orcamento: 800, coffeeBreak: false },
-  { departamento: 'Recursos Humanos', dataDesejada: '2026-06-10', enviadoEm: '2026-05-03T09:00:00.000Z', local: 'Auditório Principal', convidados: 100, orcamento: 7000, coffeeBreak: true },
-  { departamento: 'Operações', dataDesejada: '2026-06-18', enviadoEm: '2026-06-04T09:00:00.000Z', local: 'Sala Multiuso 2', convidados: 22, orcamento: 1100, coffeeBreak: false },
-  { departamento: 'Diretoria', dataDesejada: '2026-06-29', enviadoEm: '2026-05-18T09:00:00.000Z', local: 'Espaço Inovação', convidados: 35, orcamento: 5000, coffeeBreak: true },
-  { departamento: 'Tecnologia', dataDesejada: '2026-07-09', enviadoEm: '2026-06-19T09:00:00.000Z', local: 'Espaço Inovação', convidados: 40, orcamento: 2200, coffeeBreak: true },
-  { departamento: 'Comercial', dataDesejada: '2026-07-17', enviadoEm: '2026-07-01T09:00:00.000Z', local: 'Sala Multiuso 1', convidados: 26, orcamento: 1400, coffeeBreak: false },
-  { departamento: 'Marketing', dataDesejada: '2026-07-30', enviadoEm: '2026-07-02T09:00:00.000Z', local: 'Terraço', convidados: 55, orcamento: 3200, coffeeBreak: true },
-  { departamento: 'Recursos Humanos', dataDesejada: '2026-08-06', enviadoEm: '2026-07-04T09:00:00.000Z', local: 'Auditório Principal', convidados: 70, orcamento: 4000, coffeeBreak: true },
-  { departamento: 'Tecnologia', dataDesejada: '2026-08-14', enviadoEm: '2026-07-26T09:00:00.000Z', local: 'Sala Multiuso 2', convidados: 32, orcamento: 1700, coffeeBreak: false },
-  { departamento: 'Operações', dataDesejada: '2026-08-25', enviadoEm: '2026-08-01T09:00:00.000Z', local: 'Auditório Principal', convidados: 48, orcamento: 2600, coffeeBreak: true },
-  { departamento: 'Tecnologia', dataDesejada: '2026-09-10', enviadoEm: '2026-08-26T09:00:00.000Z', local: 'Sala Multiuso 2', convidados: 24, orcamento: 1300, coffeeBreak: false },
-  { departamento: 'Comercial', dataDesejada: '2026-09-18', enviadoEm: '2026-08-28T09:00:00.000Z', local: 'Espaço Inovação', convidados: 33, orcamento: 1900, coffeeBreak: true },
-  { departamento: 'Diretoria', dataDesejada: '2026-09-27', enviadoEm: '2026-08-10T09:00:00.000Z', local: 'Auditório Principal', convidados: 60, orcamento: 6500, coffeeBreak: true },
-  { departamento: 'Tecnologia', dataDesejada: '2026-10-08', enviadoEm: '2026-08-14T09:00:00.000Z', local: 'Espaço Inovação', convidados: 120, orcamento: 9000, coffeeBreak: true },
-  { departamento: 'Marketing', dataDesejada: '2026-10-21', enviadoEm: '2026-10-01T09:00:00.000Z', local: 'Terraço', convidados: 42, orcamento: 2400, coffeeBreak: false },
-  { departamento: 'Recursos Humanos', dataDesejada: '2026-11-05', enviadoEm: '2026-10-25T09:00:00.000Z', local: 'Sala Multiuso 1', convidados: 20, orcamento: 950, coffeeBreak: false },
-  { departamento: 'Operações', dataDesejada: '2026-11-19', enviadoEm: '2026-10-20T09:00:00.000Z', local: 'Espaço externo', convidados: 65, orcamento: 3800, coffeeBreak: true },
-  { departamento: 'Recursos Humanos', dataDesejada: '2026-12-15', enviadoEm: '2026-10-16T09:00:00.000Z', local: 'Auditório Principal', convidados: 150, orcamento: 8500, coffeeBreak: true },
-  { departamento: 'Tecnologia', dataDesejada: '2026-12-22', enviadoEm: '2026-12-13T09:00:00.000Z', local: 'Sala Multiuso 1', convidados: 16, orcamento: 700, coffeeBreak: false },
 ];
 
 /* ---------------------------------------------------------
@@ -131,6 +100,150 @@ function formatLongDate(date) {
 }
 
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ============================================================
+   PLANILHA DE EVENTOS — leitura, parsing e normalização.
+   Usado tanto pelo Calendário quanto pelo Painel de Indicadores
+   (uma única leitura, os dois consomem o mesmo resultado).
+   ============================================================ */
+
+// Só essas situações aparecem no site — "Suspenso" (cancelado) e
+// "Sem data" nunca são mostrados publicamente.
+const VISIBLE_STATUSES = ['Concluído', 'Confirmado', 'Previsto'];
+
+// Parser de CSV simples (RFC4180): lida com campos entre aspas,
+// vírgula/quebra de linha dentro de campo, e aspas escapadas ("").
+function parseCSV(text) {
+  const rows = [];
+  let row = [];
+  let field = '';
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; }
+        else inQuotes = false;
+      } else {
+        field += c;
+      }
+    } else if (c === '"') {
+      inQuotes = true;
+    } else if (c === ',') {
+      row.push(field); field = '';
+    } else if (c === '\r') {
+      // ignora — o \n logo em seguida fecha a linha
+    } else if (c === '\n') {
+      row.push(field); field = '';
+      rows.push(row); row = [];
+    } else {
+      field += c;
+    }
+  }
+  if (field !== '' || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+
+// 'DD/MM/AAAA' -> 'AAAA-MM-DD'. Retorna null se não for uma data válida.
+function parseBRDate(str) {
+  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec((str || '').trim());
+  if (!m) return null;
+  const [, d, mo, y] = m;
+  const iso = `${y}-${mo.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  return isNaN(parseISODate(iso).getTime()) ? null : iso;
+}
+
+// Remove valores-placeholder ("?", "Não definido"...) que aparecem
+// na planilha quando o local/sala ainda não foi decidido.
+function cleanLocationPart(v) {
+  const s = (v || '').trim();
+  if (!s || s === '?' || /^n(ã|a)o definid[oa]$/i.test(s) || /^indefinido$/i.test(s)) return '';
+  return s;
+}
+
+// Acha a linha de cabeçalho mesmo se houver uma linha de título acima
+// (comum em planilha com célula mesclada tipo "EVENTOS CESAR"), que o
+// endpoint às vezes gruda no texto da primeira coluna do cabeçalho.
+function findHeaderRowIndex(rows) {
+  for (let i = 0; i < rows.length; i++) {
+    const joined = rows[i].join('|').toLowerCase();
+    if (joined.includes('status') && joined.includes('evento') && joined.includes('início')) return i;
+  }
+  return -1;
+}
+
+// Casa cada nome de coluna esperado pelo FIM do texto do cabeçalho
+// (não por igualdade exata) — pela mesma razão acima.
+function buildHeaderIndex(headerRow) {
+  const wanted = ['Status', 'Nº Zeev', 'Categoria', 'Evento', 'Horário', 'Início', 'Fim', 'Local', 'Sala', 'Tipo', 'Estratégico', 'Cluster', 'Público', 'Esforço', 'Responsável'];
+  const idx = {};
+  headerRow.forEach((cell, i) => {
+    const c = (cell || '').trim().toLowerCase();
+    wanted.forEach((name) => {
+      if (idx[name] == null && c.endsWith(name.toLowerCase())) idx[name] = i;
+    });
+  });
+  return idx;
+}
+
+function mapRowToEvent(row, idx, rowIndex) {
+  const get = (name) => (idx[name] == null ? '' : (row[idx[name]] || '').trim());
+  const status = get('Status');
+  if (!VISIBLE_STATUSES.includes(status)) return null;
+
+  const title = get('Evento');
+  const startISO = parseBRDate(get('Início'));
+  if (!title || !startISO) return null;
+  const endISO = parseBRDate(get('Fim')) || startISO;
+
+  const local = cleanLocationPart(get('Local'));
+  const sala = cleanLocationPart(get('Sala'));
+  const location = [local, sala].filter(Boolean).join(' — ') || 'A definir';
+  const venue = local; // só o prédio/local, sem a sala — usado pro ranking do painel
+
+  const publico = get('Público');
+  const responsavel = get('Responsável');
+  const description = [
+    publico ? `Público: ${publico}` : '',
+    responsavel ? `Responsável: ${responsavel}` : '',
+  ].filter(Boolean).join(' · ');
+
+  return {
+    id: get('Nº Zeev') || `sheet-${rowIndex}`,
+    date: startISO,
+    endDate: endISO,
+    time: get('Horário'),
+    title,
+    category: get('Categoria') || 'Evento',
+    status,
+    cluster: get('Cluster'),
+    esforco: get('Esforço'),
+    estrategico: /^true$/i.test(get('Estratégico')),
+    location,
+    venue,
+    description,
+  };
+}
+
+// Busca e converte a planilha inteira numa lista de eventos, já
+// filtrada (status visível, com título e data válidos) e ordenada.
+async function fetchEventsFromSheet() {
+  const res = await fetch(`${CONFIG.EVENTS_SHEET_URL}&t=${Date.now()}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const text = await res.text();
+  const rows = parseCSV(text).filter((r) => r.some((c) => c.trim() !== ''));
+  const headerRow = findHeaderRowIndex(rows);
+  if (headerRow === -1) throw new Error('Cabeçalho da planilha não encontrado');
+  const idx = buildHeaderIndex(rows[headerRow]);
+
+  const events = [];
+  for (let i = headerRow + 1; i < rows.length; i++) {
+    const ev = mapRowToEvent(rows[i], idx, i);
+    if (ev) events.push(ev);
+  }
+  events.sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+  return events;
+}
 
 /* ============================================================
    HEADER — scroll shadow, menu mobile, scroll-spy
@@ -304,8 +417,12 @@ const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)
 
 /* ============================================================
    CALENDÁRIO
+   Recebe a lista de eventos já pronta (ver bloco "PLANILHA DE
+   EVENTOS" acima e o orquestrador no fim do arquivo) — não busca
+   dado nenhum sozinho.
    ============================================================ */
-(function initCalendar() {
+function initCalendar() {
+  const notice = document.getElementById('calendarNotice');
   const monthLabel = document.getElementById('calMonthLabel');
   const grid = document.getElementById('calDayGrid');
   const prevBtn = document.getElementById('calPrev');
@@ -313,21 +430,34 @@ const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)
   const listWrap = document.getElementById('eventList');
   const listHeading = document.getElementById('eventListHeading');
   const clearBtn = document.getElementById('eventListClear');
-  if (!grid) return;
+  if (!grid) return null;
 
+  let events = [];
   const eventsByDate = new Map();
-  EVENTS_DATA.forEach((ev) => {
-    if (!eventsByDate.has(ev.date)) eventsByDate.set(ev.date, []);
-    eventsByDate.get(ev.date).push(ev);
-  });
-
-  const today = new Date();
+  let today = new Date();
   let viewYear = today.getFullYear();
   let viewMonth = today.getMonth();
   let selectedDate = null;
 
   function isoOf(y, m, d) {
     return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  }
+
+  // Um evento de vários dias marca todo o intervalo no calendário
+  // (limitado a 60 dias, só como proteção contra dado inconsistente).
+  function rebuildIndex() {
+    eventsByDate.clear();
+    events.forEach((ev) => {
+      const start = parseISODate(ev.date);
+      const end = parseISODate(ev.endDate || ev.date);
+      const span = Math.min(60, Math.max(0, Math.round((end - start) / 86400000)));
+      for (let i = 0; i <= span; i++) {
+        const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+        const iso = isoOf(d.getFullYear(), d.getMonth(), d.getDate());
+        if (!eventsByDate.has(iso)) eventsByDate.set(iso, []);
+        eventsByDate.get(iso).push(ev);
+      }
+    });
   }
 
   function renderCalendar() {
@@ -368,8 +498,8 @@ const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)
   function upcomingEvents() {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
-    return EVENTS_DATA
-      .filter((e) => parseISODate(e.date) >= now)
+    return events
+      .filter((e) => parseISODate(e.endDate || e.date) >= now)
       .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
   }
 
@@ -392,23 +522,57 @@ const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)
     }
     items.forEach((ev) => {
       const date = parseISODate(ev.date);
+      const isMultiDay = ev.endDate && ev.endDate !== ev.date;
       const card = document.createElement('article');
       card.className = 'event-card';
-      card.innerHTML = `
-        <div class="event-date-block" aria-hidden="true">
-          <span class="day">${date.getDate()}</span>
-          <span class="month">${MONTHS_SHORT_PT[date.getMonth()]}</span>
-        </div>
-        <div class="event-card-body">
-          <span class="event-tag">${ev.category}</span>
-          <h4>${ev.title}</h4>
-          <p class="event-card-meta">
-            <span>${ICONS.clock}${ev.time}</span>
-            <span>${ICONS.pin}${ev.location}</span>
-          </p>
-        </div>`;
+
+      const dateBlock = document.createElement('div');
+      dateBlock.className = 'event-date-block';
+      dateBlock.setAttribute('aria-hidden', 'true');
+      dateBlock.innerHTML = `<span class="day">${date.getDate()}</span><span class="month">${MONTHS_SHORT_PT[date.getMonth()]}</span>`;
+
+      const body = document.createElement('div');
+      body.className = 'event-card-body';
+
+      const tag = document.createElement('span');
+      tag.className = 'event-tag';
+      tag.textContent = ev.status === 'Previsto' ? `${ev.category} · previsto` : ev.category;
+
+      const h4 = document.createElement('h4');
+      h4.textContent = ev.title;
+
+      const meta = document.createElement('p');
+      meta.className = 'event-card-meta';
+      const metaBits = [];
+      if (isMultiDay) {
+        const endDate = parseISODate(ev.endDate);
+        metaBits.push(`${ICONS.clock}até ${endDate.getDate()} de ${MONTHS_PT[endDate.getMonth()]}`);
+      } else if (ev.time) {
+        metaBits.push(`${ICONS.clock}${ev.time}`);
+      }
+      metaBits.push(`${ICONS.pin}${ev.location}`);
+      meta.innerHTML = metaBits.map((b) => `<span>${b}</span>`).join('');
+
+      body.append(tag, h4, meta);
+      card.append(dateBlock, body);
       listWrap.appendChild(card);
     });
+  }
+
+  function renderNotice(kind) {
+    const messages = {
+      'fetch-failed': `${ICONS.alert}<span><strong>Não foi possível ler a planilha de eventos agora.</strong> Mostrando dados de exemplo enquanto isso.</span>`,
+      'empty': `${ICONS.alert}<span><strong>A planilha ainda não tem eventos visíveis.</strong> Assim que uma linha com status Confirmado, Previsto ou Concluído tiver uma data válida, ela aparece aqui.</span>`,
+    };
+    if (notice) {
+      if (kind && messages[kind]) {
+        notice.innerHTML = messages[kind];
+        notice.classList.add('is-visible');
+      } else {
+        notice.classList.remove('is-visible');
+        notice.innerHTML = '';
+      }
+    }
   }
 
   prevBtn.addEventListener('click', () => {
@@ -427,116 +591,85 @@ const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)
     renderEventList();
   });
 
-  renderCalendar();
-  renderEventList();
-})();
+  function setLoading() {
+    monthLabel.textContent = 'Carregando…';
+    grid.innerHTML = '';
+    listWrap.innerHTML = '<p class="empty-note">Carregando agenda…</p>';
+  }
+
+  function render(newEvents, noticeKind) {
+    events = newEvents;
+    rebuildIndex();
+    today = new Date();
+    viewYear = today.getFullYear();
+    viewMonth = today.getMonth();
+    selectedDate = null;
+    renderCalendar();
+    renderEventList();
+    renderNotice(noticeKind);
+  }
+
+  setLoading();
+  return { render, setLoading };
+}
 
 /* ============================================================
    PAINEL DE INDICADORES
-   Lê as solicitações reais via Google Apps Script (GET) e calcula
-   tudo no navegador. Sem URL configurada — ou se a leitura falhar —
-   usa DASHBOARD_DEMO_DATA e avisa isso claramente na tela.
+   Também recebe a lista de eventos pronta (mesma fonte do
+   Calendário) — calcula tudo no navegador a partir dela.
    ============================================================ */
-(function initDashboardPanel() {
+function initDashboardPanel() {
   const notice = document.getElementById('panelNotice');
-  if (!notice) return;
+  if (!notice) return null;
 
   const refreshBtn = document.getElementById('panelRefresh');
   const updatedEl = document.getElementById('panelUpdated');
-  const AUTO_REFRESH_MS = 5 * 60 * 1000;
-
-  const currencyFmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
   const numberFmt = new Intl.NumberFormat('pt-BR');
-  const dayFmt = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 });
-
+  const pctFmt = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 });
   let lastUpdated = null;
-  let tickTimer = null;
 
-  function toDateSafe(value) {
-    if (!value) return null;
-    if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
-    const str = String(value);
-    const isoDateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(str);
-    if (isoDateOnly) {
-      return new Date(Number(isoDateOnly[1]), Number(isoDateOnly[2]) - 1, Number(isoDateOnly[3]));
-    }
-    const d = new Date(str);
-    return isNaN(d.getTime()) ? null : d;
-  }
-  function daysBetween(a, b) {
-    return Math.round((b.getTime() - a.getTime()) / 86400000);
+  function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
   }
 
-  async function fetchRequests() {
-    if (!CONFIG.APPS_SCRIPT_URL || CONFIG.APPS_SCRIPT_URL.startsWith('COLE_AQUI')) {
-      return { records: DASHBOARD_DEMO_DATA, notice: 'not-configured' };
-    }
-    try {
-      const res = await fetch(`${CONFIG.APPS_SCRIPT_URL}?t=${Date.now()}`, { method: 'GET' });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      if (!json.ok || !Array.isArray(json.data)) throw new Error('Resposta inesperada');
-      if (json.data.length === 0) return { records: [], notice: 'empty' };
-      return { records: json.data, notice: null };
-    } catch (err) {
-      return { records: DASHBOARD_DEMO_DATA, notice: 'fetch-failed' };
-    }
-  }
-
-  function computeMetrics(records) {
-    const total = records.length;
+  function computeMetrics(events) {
+    const total = events.length;
     const monthMap = new Map();
-    const roomMap = new Map();
-    const deptMap = new Map();
-    let guestsSum = 0, guestsCount = 0;
-    let budgetSum = 0, budgetCount = 0;
-    let leadSum = 0, leadCount = 0;
-    let coffeeCount = 0;
-    let diretoriaCount = 0;
+    const venueMap = new Map();
+    const categoryMap = new Map();
+    let confirmadoCount = 0;
+    let estrategicoCount = 0;
+    let boardCount = 0;
+    let altoEsforcoCount = 0;
 
-    records.forEach((r) => {
-      const dd = toDateSafe(r.dataDesejada);
-      if (dd) {
-        const key = `${dd.getFullYear()}-${String(dd.getMonth() + 1).padStart(2, '0')}`;
-        monthMap.set(key, (monthMap.get(key) || 0) + 1);
-      }
+    events.forEach((ev) => {
+      const d = parseISODate(ev.date);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      monthMap.set(key, (monthMap.get(key) || 0) + 1);
 
-      const local = String(r.local || '').trim();
-      if (local) roomMap.set(local, (roomMap.get(local) || 0) + 1);
+      const venue = String(ev.venue || '').trim();
+      if (venue) venueMap.set(venue, (venueMap.get(venue) || 0) + 1);
 
-      const dept = String(r.departamento || '').trim();
-      if (dept) {
-        deptMap.set(dept, (deptMap.get(dept) || 0) + 1);
-        if (dept === 'Diretoria') diretoriaCount++;
-      }
+      const category = String(ev.category || '').trim();
+      if (category) categoryMap.set(category, (categoryMap.get(category) || 0) + 1);
 
-      const guests = Number(r.convidados);
-      if (Number.isFinite(guests) && guests > 0) { guestsSum += guests; guestsCount++; }
-
-      const budget = Number(r.orcamento);
-      if (Number.isFinite(budget) && budget > 0) { budgetSum += budget; budgetCount++; }
-
-      const sentDate = toDateSafe(r.enviadoEm);
-      if (dd && sentDate) {
-        const lead = daysBetween(sentDate, dd);
-        if (Number.isFinite(lead) && lead >= 0) { leadSum += lead; leadCount++; }
-      }
-
-      if (r.coffeeBreak === true || r.coffeeBreak === 'Sim' || r.coffeeBreak === 'sim') coffeeCount++;
+      if (ev.status === 'Confirmado') confirmadoCount++;
+      if (ev.estrategico) estrategicoCount++;
+      if (String(ev.cluster || '').trim() === 'Board') boardCount++;
+      if (String(ev.esforco || '').trim() === 'Alto') altoEsforcoCount++;
     });
 
+    const pct = (n) => (total ? (n / total) * 100 : 0);
     return {
       total,
       monthEntries: Array.from(monthMap.entries()).sort((a, b) => a[0].localeCompare(b[0])),
-      roomEntries: Array.from(roomMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5),
-      deptEntries: Array.from(deptMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5),
-      avgGuests: guestsCount ? guestsSum / guestsCount : null,
-      avgBudget: budgetCount ? budgetSum / budgetCount : null,
-      avgLeadDays: leadCount ? leadSum / leadCount : null,
-      coffeeCount,
-      coffeePct: total ? (coffeeCount / total) * 100 : 0,
-      diretoriaCount,
-      diretoriaPct: total ? (diretoriaCount / total) * 100 : 0,
+      venueEntries: Array.from(venueMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5),
+      categoryEntries: Array.from(categoryMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5),
+      confirmadoCount, confirmadoPct: pct(confirmadoCount),
+      estrategicoCount, estrategicoPct: pct(estrategicoCount),
+      boardCount, boardPct: pct(boardCount),
+      altoEsforcoCount, altoEsforcoPct: pct(altoEsforcoCount),
     };
   }
 
@@ -549,18 +682,13 @@ const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)
     return `${MONTHS_PT[m - 1]} de ${y}`;
   }
 
-  function setText(id, value) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = value;
-  }
-
   function renderMonthChart(entries) {
     const wrap = document.getElementById('monthBarChart');
     wrap.innerHTML = '';
     if (!entries.length) {
       const p = document.createElement('p');
       p.className = 'empty-note';
-      p.textContent = 'Sem solicitações suficientes ainda.';
+      p.textContent = 'Sem eventos suficientes ainda.';
       wrap.appendChild(p);
       return;
     }
@@ -569,7 +697,7 @@ const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)
       const col = document.createElement('div');
       col.className = 'bar-col';
       col.tabIndex = 0;
-      const fullLabel = `${monthLabelFull(key)}: ${value} solicitaç${value > 1 ? 'ões' : 'ão'}`;
+      const fullLabel = `${monthLabelFull(key)}: ${value} evento${value > 1 ? 's' : ''}`;
       col.setAttribute('aria-label', fullLabel);
       col.title = fullLabel;
 
@@ -634,27 +762,26 @@ const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)
   }
 
   function renderStats(m) {
-    setText('statAvgGuests', m.avgGuests != null ? numberFmt.format(Math.round(m.avgGuests)) : '—');
-    setText('statAvgGuestsCaption', m.avgGuests != null ? `em ${numberFmt.format(m.total)} solicitações` : 'sem dados ainda');
+    setText('statTotal', m.total ? numberFmt.format(m.total) : '—');
+    setText('statTotalCaption', m.total ? 'no calendário' : 'sem dados ainda');
 
-    setText('statLeadTime', m.avgLeadDays != null ? dayFmt.format(m.avgLeadDays) : '—');
-    setText('statLeadTimeCaption', m.avgLeadDays != null ? 'dias entre pedido e evento' : 'sem dados ainda');
+    setText('statConfirmados', m.total ? numberFmt.format(m.confirmadoCount) : '—');
+    setText('statConfirmadosCaption', m.total ? `${pctFmt.format(m.confirmadoPct)}% do total` : 'sem dados ainda');
 
-    setText('statCoffee', m.total ? numberFmt.format(m.coffeeCount) : '—');
-    setText('statCoffeeCaption', m.total ? `${dayFmt.format(m.coffeePct)}% das solicitações` : 'sem dados ainda');
+    setText('statEstrategicos', m.total ? numberFmt.format(m.estrategicoCount) : '—');
+    setText('statEstrategicosCaption', m.total ? `${pctFmt.format(m.estrategicoPct)}% do total` : 'sem dados ainda');
 
-    setText('statDiretoria', m.total ? numberFmt.format(m.diretoriaCount) : '—');
-    setText('statDiretoriaCaption', m.total ? `${dayFmt.format(m.diretoriaPct)}% das solicitações` : 'sem dados ainda');
+    setText('statDiretoria', m.total ? numberFmt.format(m.boardCount) : '—');
+    setText('statDiretoriaCaption', m.total ? `${pctFmt.format(m.boardPct)}% do total` : 'sem dados ainda');
 
-    setText('statBudget', m.avgBudget != null ? currencyFmt.format(m.avgBudget) : '—');
-    setText('statBudgetCaption', m.avgBudget != null ? 'por evento, em média' : 'sem dados ainda');
+    setText('statEsforco', m.total ? numberFmt.format(m.altoEsforcoCount) : '—');
+    setText('statEsforcoCaption', m.total ? `${pctFmt.format(m.altoEsforcoPct)}% do total` : 'sem dados ainda');
   }
 
   function renderNotice(kind) {
     const messages = {
-      'not-configured': `${ICONS.alert}<span><strong>Mostrando dados de exemplo.</strong> Configure <code>CONFIG.APPS_SCRIPT_URL</code> em script.js pra ver os números reais das solicitações (veja o README.md).</span>`,
-      'fetch-failed': `${ICONS.alert}<span><strong>Não foi possível ler os dados agora.</strong> Mostrando dados de exemplo enquanto isso — tente atualizar em instantes.</span>`,
-      'empty': `${ICONS.alert}<span><strong>Ainda não há solicitações registradas.</strong> Assim que o formulário receber os primeiros pedidos, os indicadores aparecem aqui automaticamente.</span>`,
+      'fetch-failed': `${ICONS.alert}<span><strong>Não foi possível ler a planilha de eventos agora.</strong> Mostrando dados de exemplo enquanto isso — tente atualizar em instantes.</span>`,
+      'empty': `${ICONS.alert}<span><strong>A planilha ainda não tem eventos visíveis.</strong> Os indicadores aparecem assim que houver linhas com status Confirmado, Previsto ou Concluído.</span>`,
     };
     if (kind && messages[kind]) {
       notice.innerHTML = messages[kind];
@@ -674,33 +801,61 @@ const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)
     else label = `Atualizado às ${lastUpdated.getHours()}:${String(lastUpdated.getMinutes()).padStart(2, '0')}`;
     updatedEl.textContent = label;
   }
+  setInterval(updateTimestampLabel, 30 * 1000);
 
-  async function loadAndRender() {
+  function setLoading() {
     refreshBtn.classList.add('is-loading');
     refreshBtn.disabled = true;
+  }
 
-    const { records, notice: noticeKind } = await fetchRequests();
-    const metrics = computeMetrics(records);
-
+  function render(events, noticeKind) {
+    const metrics = computeMetrics(events);
     renderStats(metrics);
     renderMonthChart(metrics.monthEntries);
-    renderRankList('roomsRankList', metrics.roomEntries, 'solicitações');
-    renderRankList('deptsRankList', metrics.deptEntries, 'solicitações');
+    renderRankList('roomsRankList', metrics.venueEntries, 'eventos');
+    renderRankList('deptsRankList', metrics.categoryEntries, 'eventos');
     renderNotice(noticeKind);
-
     lastUpdated = new Date();
     updateTimestampLabel();
-
     refreshBtn.classList.remove('is-loading');
     refreshBtn.disabled = false;
   }
 
-  refreshBtn.addEventListener('click', loadAndRender);
-  loadAndRender();
+  return { render, setLoading };
+}
 
-  clearInterval(tickTimer);
-  tickTimer = setInterval(updateTimestampLabel, 30 * 1000);
-  setInterval(loadAndRender, AUTO_REFRESH_MS);
+/* ============================================================
+   PLANILHA → CALENDÁRIO + PAINEL
+   Busca a planilha uma única vez e alimenta os dois com os
+   mesmos dados. Atualiza sozinho a cada CONFIG.EVENTS_REFRESH_MS,
+   mais o botão "Atualizar" do painel pra forçar na hora.
+   ============================================================ */
+(function initEventsFeed() {
+  const calendar = initCalendar();
+  const dashboard = initDashboardPanel();
+  if (!calendar && !dashboard) return;
+
+  const refreshBtn = document.getElementById('panelRefresh');
+
+  async function load() {
+    if (dashboard) dashboard.setLoading();
+    let events;
+    let noticeKind = null;
+    try {
+      events = await fetchEventsFromSheet();
+      if (events.length === 0) { noticeKind = 'empty'; }
+    } catch (err) {
+      events = EVENTS_DEMO_DATA;
+      noticeKind = 'fetch-failed';
+    }
+    if (calendar) calendar.render(events, noticeKind);
+    if (dashboard) dashboard.render(events, noticeKind);
+  }
+
+  if (refreshBtn) refreshBtn.addEventListener('click', load);
+
+  load();
+  setInterval(load, CONFIG.EVENTS_REFRESH_MS);
 })();
 
 /* ============================================================
@@ -821,172 +976,37 @@ const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)
 })();
 
 /* ============================================================
-   MODAL — FORMULÁRIO DE SOLICITAÇÃO DE EVENTO
+   SOLICITAR EVENTO — abre o formulário do Zeev (CONFIG.EVENT_REQUEST_URL)
+   numa janela própria, em vez de um formulário deste site. O
+   fechamento automático da janela depois do envio é feito pela
+   própria página do Zeev (ela decide isso, não este script) —
+   quando aberta via window.open, plataformas assim costumam se
+   fechar sozinhas ao concluir o fluxo.
    ============================================================ */
-(function initRequestForm() {
-  const dialog = document.getElementById('requestDialog');
-  const openBtns = document.querySelectorAll('[data-open-request-form]');
-  const closeBtn = document.getElementById('requestClose');
-  const form = document.getElementById('requestForm');
-  const formBody = document.getElementById('formBody');
-  const successView = document.getElementById('formSuccessView');
-  const submitBtn = document.getElementById('requestSubmit');
-  const statusBox = document.getElementById('formStatus');
-  const fileInput = document.getElementById('fieldAttachment');
-  const fileChip = document.getElementById('fileNameChip');
-  const fileRemove = document.getElementById('fileRemove');
-  const dropZone = document.getElementById('fileDropZone');
-  const successCloseBtn = document.getElementById('formSuccessClose');
-  if (!dialog) return;
+(function initRequestWindow() {
+  const triggers = document.querySelectorAll('[data-open-request-form]');
+  if (!triggers.length) return;
 
-  let isDirty = false;
-
-  function resetForm() {
-    form.reset();
-    isDirty = false;
-    fileChip.style.display = 'none';
-    statusBox.classList.remove('is-visible', 'success', 'error');
-    form.querySelectorAll('.field').forEach((f) => f.classList.remove('has-error'));
-    formBody.classList.remove('is-hidden');
-    successView.classList.remove('is-visible');
-  }
-
-  openBtns.forEach((btn) => btn.addEventListener('click', () => {
-    resetForm();
-    dialog.showModal();
-    document.getElementById('fieldName').focus();
-  }));
-
-  form.addEventListener('input', () => { isDirty = true; });
-
-  function requestClose() {
-    if (isDirty && !successView.classList.contains('is-visible')) {
-      const ok = window.confirm('Você preencheu informações que ainda não foram enviadas. Deseja realmente fechar e descartá-las?');
-      if (!ok) return;
+  function openRequestWindow() {
+    const width = 900;
+    const height = 820;
+    const left = Math.max(0, Math.round((window.screen.width - width) / 2));
+    const top = Math.max(0, Math.round((window.screen.height - height) / 2));
+    const features = `width=${width},height=${height},left=${left},top=${top},noopener,noreferrer,resizable=yes,scrollbars=yes`;
+    const win = window.open(CONFIG.EVENT_REQUEST_URL, 'solicitarEventoCESAR', features);
+    if (!win) {
+      // pop-up bloqueado pelo navegador — abre em nova aba como alternativa
+      window.open(CONFIG.EVENT_REQUEST_URL, '_blank', 'noopener,noreferrer');
+    } else {
+      win.focus();
     }
-    dialog.close();
   }
-  closeBtn.addEventListener('click', requestClose);
-  successCloseBtn.addEventListener('click', () => dialog.close());
-  dialog.addEventListener('cancel', (e) => {
-    // tecla Esc dispara 'cancel' antes de fechar — intercepta se precisar confirmar
-    if (isDirty && !successView.classList.contains('is-visible')) {
+
+  triggers.forEach((el) => {
+    el.addEventListener('click', (e) => {
       e.preventDefault();
-      requestClose();
-    }
-  });
-
-  dropZone.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
-  });
-
-  fileInput.addEventListener('change', () => {
-    const file = fileInput.files[0];
-    if (!file) { fileChip.style.display = 'none'; return; }
-    const maxBytes = CONFIG.MAX_FILE_MB * 1024 * 1024;
-    if (file.size > maxBytes) {
-      window.alert(`O arquivo escolhido tem mais de ${CONFIG.MAX_FILE_MB}MB. Escolha um arquivo menor.`);
-      fileInput.value = '';
-      fileChip.style.display = 'none';
-      return;
-    }
-    fileChip.querySelector('span').textContent = file.name;
-    fileChip.style.display = 'inline-flex';
-    isDirty = true;
-  });
-  fileRemove.addEventListener('click', () => {
-    fileInput.value = '';
-    fileChip.style.display = 'none';
-  });
-
-  function fileToBase64(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result.split(',')[1]);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
+      openRequestWindow();
     });
-  }
-
-  function showFieldError(field, message) {
-    const wrap = field.closest('.field');
-    wrap.classList.add('has-error');
-    wrap.querySelector('.field-error').textContent = message;
-  }
-  function clearFieldError(field) {
-    field.closest('.field').classList.remove('has-error');
-  }
-
-  function validateForm() {
-    let firstInvalid = null;
-    form.querySelectorAll('[data-required]').forEach((field) => {
-      field.setAttribute('data-touched', 'true');
-      const valid = field.checkValidity() && field.value.trim() !== '';
-      if (!valid) {
-        showFieldError(field, field.dataset.errorMessage || 'Preencha este campo.');
-        if (!firstInvalid) firstInvalid = field;
-      } else {
-        clearFieldError(field);
-      }
-    });
-    return firstInvalid;
-  }
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const firstInvalid = validateForm();
-    if (firstInvalid) { firstInvalid.focus(); return; }
-
-    submitBtn.classList.add('is-loading');
-    submitBtn.disabled = true;
-    statusBox.classList.remove('is-visible', 'success', 'error');
-
-    const payload = {
-      nome: form.fieldName.value.trim(),
-      email: form.fieldEmail.value.trim(),
-      departamento: form.fieldDept.value,
-      tipoEvento: form.fieldType.value,
-      dataDesejada: form.fieldDate.value,
-      local: form.fieldLocation.value,
-      convidados: form.fieldGuests.value,
-      descricao: form.fieldDescription.value.trim(),
-      orcamento: form.fieldBudget.value,
-      coffeeBreak: form.fieldCoffeeBreak.checked,
-      enviadoEm: new Date().toISOString(),
-      anexo: null,
-    };
-
-    try {
-      const file = fileInput.files[0];
-      if (file) {
-        payload.anexo = { nome: file.name, tipo: file.type, dados: await fileToBase64(file) };
-      }
-
-      if (CONFIG.APPS_SCRIPT_URL.startsWith('COLE_AQUI')) {
-        throw new Error('CONFIG_MISSING');
-      }
-
-      // 'text/plain' evita o preflight CORS que o Apps Script não responde por padrão.
-      await fetch(CONFIG.APPS_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload),
-      });
-
-      // modo 'no-cors' sempre retorna uma resposta opaca: não dá pra ler o
-      // status real do servidor, então tratamos "sem erro de rede" como sucesso.
-      formBody.classList.add('is-hidden');
-      successView.classList.add('is-visible');
-      isDirty = false;
-    } catch (err) {
-      statusBox.classList.add('is-visible', 'error');
-      statusBox.innerHTML = CONFIG.APPS_SCRIPT_URL.startsWith('COLE_AQUI')
-        ? `${ICONS.alert}<span><strong>Formulário ainda não conectado.</strong> Configure a URL do Apps Script em <code>CONFIG.APPS_SCRIPT_URL</code> no script.js (veja o README.md).</span>`
-        : `${ICONS.alert}<span><strong>Não foi possível enviar agora.</strong> Verifique sua conexão e tente novamente.</span>`;
-    } finally {
-      submitBtn.classList.remove('is-loading');
-      submitBtn.disabled = false;
-    }
   });
 })();
+
