@@ -47,8 +47,18 @@ O site lê a **primeira aba** da planilha (a exportação usa `gid=0`) e procura
 | `Esforço` | Eventos com `Alto` contam pro indicador "Esforço alto". |
 | `Estratégico` | `TRUE`/`FALSE` — conta pro indicador "Estratégicos". |
 | `Público`, `Responsável` | Viram a descrição curta do evento (mostrada ao clicar num dia do calendário). |
+| `Galeria` | Links de foto do evento — veja a seção seguinte. |
 
 Colunas extras na planilha (`Nº Zeev`, `Tipo`, `Blueprint`, `Observações` etc.) são ignoradas — pode manter à vontade.
+
+### Coluna "Galeria" — fotos que aparecem na seção Galeria de momentos
+
+Cole na célula um ou mais links de foto (`http://` ou `https://`) — pode separar por vírgula, ponto e vírgula, espaço ou quebra de linha (Alt+Enter dentro da célula), como preferir. O site extrai qualquer link que encontrar na célula, não importa o separador.
+
+- Cada link vira uma foto na Galeria, no **ano da data de Início** do evento, com o **título do evento** como legenda.
+- Linha sem nada na coluna `Galeria` simplesmente não aparece lá — não precisa preencher todo mundo.
+- Isso **soma** com as fotos já cadastradas manualmente em `GALLERY_DATA` (topo de `script.js`) — não substitui. Pra editar/remover essas fotos manuais (as de 2023–2024, por exemplo, que não têm evento correspondente na planilha), continua sendo direto em `script.js`.
+- Os links precisam apontar direto pra imagem (terminando em `.jpg`, `.png` etc., ou qualquer URL que devolva uma imagem) — um link de uma pasta do Google Drive ou de uma página não funciona como `<img>`. Fotos hospedadas no Brevo/Mailinblue (como as que já estão em `GALLERY_DATA`) funcionam bem.
 
 ### Se quiser trocar de planilha
 

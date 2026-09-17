@@ -1586,6 +1586,14 @@ function cleanLocationPart(v) {
   return s;
 }
 
+// Extrai links de imagem da coluna "Galeria" — aceita qualquer jeito
+// de separar (vírgula, ponto e vírgula, quebra de linha, espaço),
+// já que é preenchido à mão. Pega qualquer texto que comece com
+// http(s):// e ignora o resto.
+function extractUrls(text) {
+  return (text || '').match(/https?:\/\/[^\s,;]+/g) || [];
+}
+
 // Acha a linha de cabeçalho mesmo se houver uma linha de título acima
 // (comum em planilha com célula mesclada tipo "EVENTOS CESAR"), que o
 // endpoint às vezes gruda no texto da primeira coluna do cabeçalho.
@@ -1600,7 +1608,7 @@ function findHeaderRowIndex(rows) {
 // Casa cada nome de coluna esperado pelo FIM do texto do cabeçalho
 // (não por igualdade exata) — pela mesma razão acima.
 function buildHeaderIndex(headerRow) {
-  const wanted = ['Status', 'Nº Zeev', 'Categoria', 'Evento', 'Horário', 'Início', 'Fim', 'Local', 'Sala', 'Tipo', 'Estratégico', 'Cluster', 'Público', 'Esforço', 'Responsável'];
+  const wanted = ['Status', 'Nº Zeev', 'Categoria', 'Evento', 'Horário', 'Início', 'Fim', 'Local', 'Sala', 'Tipo', 'Estratégico', 'Cluster', 'Público', 'Esforço', 'Responsável', 'Galeria'];
   const idx = {};
   headerRow.forEach((cell, i) => {
     const c = (cell || '').trim().toLowerCase();
@@ -1633,11 +1641,14 @@ function mapRowToEvent(row, idx, rowIndex) {
     responsavel ? `Responsável: ${responsavel}` : '',
   ].filter(Boolean).join(' · ');
 
+  const galleryUrls = extractUrls(get('Galeria'));
+
   return {
     id: get('Nº Zeev') || `sheet-${rowIndex}`,
     date: startISO,
     endDate: endISO,
     time: get('Horário'),
+    galleryUrls,
     title,
     category: get('Categoria') || 'Evento',
     status,
@@ -2250,15 +2261,16 @@ function initDashboardPanel() {
 }
 
 /* ============================================================
-   PLANILHA → CALENDÁRIO + PAINEL
-   Busca a planilha uma única vez e alimenta os dois com os
+   PLANILHA → CALENDÁRIO + PAINEL + GALERIA
+   Busca a planilha uma única vez e alimenta os três com os
    mesmos dados. Atualiza sozinho a cada CONFIG.EVENTS_REFRESH_MS,
    mais o botão "Atualizar" do painel pra forçar na hora.
    ============================================================ */
 (function initEventsFeed() {
   const calendar = initCalendar();
   const dashboard = initDashboardPanel();
-  if (!calendar && !dashboard) return;
+  const gallery = initGallery();
+  if (!calendar && !dashboard && !gallery) return;
 
   const refreshBtn = document.getElementById('panelRefresh');
 
@@ -2275,6 +2287,7 @@ function initDashboardPanel() {
     }
     if (calendar) calendar.render(events, noticeKind);
     if (dashboard) dashboard.render(events, noticeKind);
+    if (gallery) gallery.render(events);
   }
 
   if (refreshBtn) refreshBtn.addEventListener('click', load);
@@ -2285,35 +2298,61 @@ function initDashboardPanel() {
 
 /* ============================================================
    GALERIA DE FOTOS POR ANO
+   Combina GALLERY_DATA (fotos curadas à mão, ver topo do arquivo)
+   com as fotos da coluna "Galeria" da planilha de eventos — uma
+   por link encontrado na célula, no ano do evento.
    ============================================================ */
-(function initGallery() {
+function buildGalleryFromEvents(events) {
+  const items = [];
+  events.forEach((ev) => {
+    if (!ev.galleryUrls || !ev.galleryUrls.length) return;
+    const d = parseISODate(ev.date);
+    const month = MONTHS_PT[d.getMonth()];
+    ev.galleryUrls.forEach((url) => {
+      items.push({
+        year: d.getFullYear(),
+        title: ev.title,
+        month: month.charAt(0).toUpperCase() + month.slice(1),
+        src: url,
+      });
+    });
+  });
+  return items;
+}
+
+function initGallery() {
   const tabsWrap = document.getElementById('yearTabs');
   const grid = document.getElementById('galleryGrid');
-  if (!tabsWrap || !grid) return;
+  if (!tabsWrap || !grid) return null;
 
-  const years = Array.from(new Set(GALLERY_DATA.map((p) => p.year))).sort((a, b) => b - a);
-  let activeYear = years[0];
+  let allItems = GALLERY_DATA.slice();
+  let years = [];
+  let activeYear = null;
   let activeItems = [];
   let lightboxIndex = 0;
 
-  years.forEach((year) => {
-    const tab = document.createElement('button');
-    tab.type = 'button';
-    tab.className = 'year-tab';
-    tab.textContent = year;
-    tab.setAttribute('aria-pressed', String(year === activeYear));
-    tab.addEventListener('click', () => {
-      activeYear = year;
-      Array.from(tabsWrap.children).forEach((t) => t.setAttribute('aria-pressed', String(t.textContent == year)));
-      tabsWrap.querySelectorAll('.year-tab').forEach((t) => t.classList.toggle('is-active', Number(t.textContent) === year));
-      renderGrid();
+  function renderTabs() {
+    years = Array.from(new Set(allItems.map((p) => p.year))).sort((a, b) => b - a);
+    if (!years.includes(activeYear)) activeYear = years[0];
+    tabsWrap.innerHTML = '';
+    years.forEach((year) => {
+      const tab = document.createElement('button');
+      tab.type = 'button';
+      tab.className = 'year-tab';
+      tab.textContent = year;
+      tab.setAttribute('aria-pressed', String(year === activeYear));
+      if (year === activeYear) tab.classList.add('is-active');
+      tab.addEventListener('click', () => {
+        activeYear = year;
+        renderTabs();
+        renderGrid();
+      });
+      tabsWrap.appendChild(tab);
     });
-    tabsWrap.appendChild(tab);
-  });
-  tabsWrap.firstElementChild.classList.add('is-active');
+  }
 
   function renderGrid() {
-    activeItems = GALLERY_DATA.filter((p) => p.year === activeYear);
+    activeItems = allItems.filter((p) => p.year === activeYear);
     grid.innerHTML = '';
     if (activeItems.length === 0) {
       grid.innerHTML = '<p class="empty-note">Ainda não há fotos cadastradas para este ano.</p>';
@@ -2397,8 +2436,15 @@ function initDashboardPanel() {
   lbClose.addEventListener('click', () => lightbox.close());
   lightbox.addEventListener('click', (e) => { if (e.target === lightbox) lightbox.close(); });
 
-  renderGrid();
-})();
+  function render(events) {
+    allItems = GALLERY_DATA.concat(buildGalleryFromEvents(events || []));
+    renderTabs();
+    renderGrid();
+  }
+
+  render([]);
+  return { render };
+}
 
 /* ============================================================
    SOLICITAR EVENTO — abre o formulário do Zeev (CONFIG.EVENT_REQUEST_URL)
