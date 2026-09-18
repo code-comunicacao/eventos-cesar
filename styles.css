@@ -38,6 +38,13 @@ a { color: inherit; text-decoration: none; }
   --success: #35D07F;
   --success-ink: #05300F;
   --focus-ring: #FFD9A8;
+  /* paleta categórica do mapa de árvore (painel) — validada com o script
+     do skill de dataviz pra separação sob daltonismo, nas 3 combinações
+     possíveis lado a lado (all-pairs), contra o fundo #0A0908 */
+  --treemap-1: #D95926; /* laranja — Interno + Cliente */
+  --treemap-2: #3987E5; /* azul — Público externo */
+  --treemap-3: #199E70; /* verde-água — Colaboradores */
+  --treemap-other: #5C5147; /* neutro — Outros (não faz parte da paleta categórica) */
 
   /* type */
   --font-display: 'Poppins', 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -714,6 +721,7 @@ section { position: relative; scroll-margin-top: 96px; }
   gap: var(--space-4);
 }
 @media (min-width: 700px) { .panel-charts { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1300px) { .panel-charts { grid-template-columns: repeat(3, 1fr); } }
 .chart-card-wide { grid-column: 1 / -1; }
 
 .chart-card {
@@ -784,6 +792,61 @@ section { position: relative; scroll-margin-top: 96px; }
 .rank-bar-track { height: 10px; border-radius: var(--radius-pill); background: var(--bg-elev-2); overflow: hidden; }
 .rank-bar-fill { height: 100%; min-width: 4px; border-radius: var(--radius-pill); background: var(--orange); }
 .rank-value { font-size: 13px; font-weight: 700; color: var(--off-white); text-align: right; font-variant-numeric: tabular-nums; }
+
+/* mapa de árvore — público que participa dos eventos */
+.treemap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2.3 / 1;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.treemap-cell {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 2px;
+  padding: var(--space-3);
+  border: 2px solid var(--bg); /* faz as vezes de espaçamento entre blocos */
+  box-sizing: border-box;
+  cursor: default;
+  transition: filter var(--dur-fast) var(--ease-out);
+}
+.treemap-cell:hover, .treemap-cell:focus-visible { filter: brightness(1.1); }
+.treemap-cell-name {
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.treemap-cell-value {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.85;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.treemap-cell.is-compact .treemap-cell-name,
+.treemap-cell.is-compact .treemap-cell-value { display: none; }
+
+.treemap-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin-top: var(--space-4);
+}
+.treemap-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--off-white-dim);
+}
+.treemap-legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
 
 .panel-updated { margin-top: var(--space-6); font-size: 12.5px; color: var(--off-white-dim); text-align: right; }
 @keyframes spin { to { transform: rotate(360deg); } }

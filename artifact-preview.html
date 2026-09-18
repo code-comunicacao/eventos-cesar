@@ -55,6 +55,13 @@ a { color: inherit; text-decoration: none; }
   --success: #35D07F;
   --success-ink: #05300F;
   --focus-ring: #FFD9A8;
+  /* paleta categórica do mapa de árvore (painel) — validada com o script
+     do skill de dataviz pra separação sob daltonismo, nas 3 combinações
+     possíveis lado a lado (all-pairs), contra o fundo #0A0908 */
+  --treemap-1: #D95926; /* laranja — Interno + Cliente */
+  --treemap-2: #3987E5; /* azul — Público externo */
+  --treemap-3: #199E70; /* verde-água — Colaboradores */
+  --treemap-other: #5C5147; /* neutro — Outros (não faz parte da paleta categórica) */
 
   /* type */
   --font-display: 'Poppins', 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -731,6 +738,7 @@ section { position: relative; scroll-margin-top: 96px; }
   gap: var(--space-4);
 }
 @media (min-width: 700px) { .panel-charts { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1300px) { .panel-charts { grid-template-columns: repeat(3, 1fr); } }
 .chart-card-wide { grid-column: 1 / -1; }
 
 .chart-card {
@@ -801,6 +809,61 @@ section { position: relative; scroll-margin-top: 96px; }
 .rank-bar-track { height: 10px; border-radius: var(--radius-pill); background: var(--bg-elev-2); overflow: hidden; }
 .rank-bar-fill { height: 100%; min-width: 4px; border-radius: var(--radius-pill); background: var(--orange); }
 .rank-value { font-size: 13px; font-weight: 700; color: var(--off-white); text-align: right; font-variant-numeric: tabular-nums; }
+
+/* mapa de árvore — público que participa dos eventos */
+.treemap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2.3 / 1;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.treemap-cell {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 2px;
+  padding: var(--space-3);
+  border: 2px solid var(--bg); /* faz as vezes de espaçamento entre blocos */
+  box-sizing: border-box;
+  cursor: default;
+  transition: filter var(--dur-fast) var(--ease-out);
+}
+.treemap-cell:hover, .treemap-cell:focus-visible { filter: brightness(1.1); }
+.treemap-cell-name {
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.treemap-cell-value {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.85;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.treemap-cell.is-compact .treemap-cell-name,
+.treemap-cell.is-compact .treemap-cell-value { display: none; }
+
+.treemap-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin-top: var(--space-4);
+}
+.treemap-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--off-white-dim);
+}
+.treemap-legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
 
 .panel-updated { margin-top: var(--space-6); font-size: 12.5px; color: var(--off-white-dim); text-align: right; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -1036,80 +1099,11 @@ section { position: relative; scroll-margin-top: 96px; }
         <div class="carousel-track">
 
           <article class="slide">
-            <img class="slide-bg" src="https://img.mailinblue.com/8183049/images/content_library/original/6aa04a34202ac0a13ea31faa.jpg" alt="" loading="lazy">
-            <div class="slide-scrim" aria-hidden="true"></div>
-            <div class="slide-copy">
-              <p class="eyebrow">Evento em destaque</p>
-              <h2>Depois do trabalho, vem a <span class="script">festa.</span></h2>
-              <p>Confraternização de fim de ano CESAR — comida boa, música ao vivo e premiações pra toda a equipe.</p>
-              <div class="slide-meta">
-                <span class="meta-chip">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="2"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>
-                  15 de dezembro | 19h
-                </span>
-                <span class="meta-chip">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0112 2a7 7 0 017 7.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
-                  Auditório Principal
-                </span>
-              </div>
-              <div class="slide-actions">
-                <a class="btn btn-ghost btn-block" href="#calendario">Confira a agenda completa de eventos no CESAR</a>
-              </div>
-            </div>
-          </article>
-
-          <article class="slide">
-            <img class="slide-bg" src="https://img.mailinblue.com/8183049/images/content_library/original/6aa044f4da5ffecab04880c8.jpg" alt="" loading="lazy">
-            <div class="slide-scrim" aria-hidden="true"></div>
-            <div class="slide-copy">
-              <p class="eyebrow">Capacitação</p>
-              <h2>Aprenda. Cresça. <span class="script">Evolua.</span></h2>
-              <p>Workshop de Liderança com sessões práticas sobre gestão de times, feedback e comunicação.</p>
-              <div class="slide-meta">
-                <span class="meta-chip">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="2"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>
-                  10 de setembro | 14h
-                </span>
-                <span class="meta-chip">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0112 2a7 7 0 017 7.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
-                  CESAR Moinho - Sala Risoflora
-                </span>
-              </div>
-              <div class="slide-actions">
-                <a class="btn btn-ghost btn-block" href="#calendario">Confira a agenda completa de eventos no CESAR</a>
-              </div>
-            </div>
-          </article>
-
-          <article class="slide">
-            <img class="slide-bg" src="https://img.mailinblue.com/8183049/images/content_library/original/6aa0450e6e62f21c34cd490f.jpg" alt="" loading="lazy">
-            <div class="slide-scrim" aria-hidden="true"></div>
-            <div class="slide-copy">
-              <p class="eyebrow">Inovação</p>
-              <h2>O futuro começa <span class="script">aqui.</span></h2>
-              <p>Hackathon CESAR: 48 horas de criação em equipe, mentoria e premiação pras melhores ideias.</p>
-              <div class="slide-meta">
-                <span class="meta-chip">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="2"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>
-                  8 de outubro | 9h
-                </span>
-                <span class="meta-chip">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0112 2a7 7 0 017 7.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
-                  CESAR School Brum - Sala 103
-                </span>
-              </div>
-              <div class="slide-actions">
-                <a class="btn btn-ghost btn-block" href="#calendario">Confira a agenda completa de eventos no CESAR</a>
-              </div>
-            </div>
-          </article>
-
-          <article class="slide">
             <img class="slide-bg" src="https://img.mailinblue.com/8183049/images/content_library/original/6aac90b38255a49ca9fe19f7.png" alt="" loading="lazy">
             <div class="slide-scrim" aria-hidden="true"></div>
             <div class="slide-copy">
               <p class="eyebrow">Treinamento</p>
-              <h2>Guardião Cibernético. <span class="script">Cibersegurança.</span></h2>
+              <h2>Guardião Cibernético. <span class="script">Cibersegurança</span></h2>
               <p>O CESAR recebe o maior treinamento de defesa cibernética do Hemisfério Sul! Organizado pelo Exército Brasileiro.</p>
               <div class="slide-meta">
                 <span class="meta-chip">
@@ -1119,6 +1113,121 @@ section { position: relative; scroll-margin-top: 96px; }
                 <span class="meta-chip">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0112 2a7 7 0 017 7.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
                   CESAR Moinho - Open Space
+                </span>
+              </div>
+              <div class="slide-actions">
+                <a class="btn btn-ghost btn-block" href="#calendario">Confira a agenda completa de eventos no CESAR</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="slide">
+            <img class="slide-bg" src="https://img.mailinblue.com/8183049/images/content_library/original/6aad45be39eb9ec809e7f782.png" alt="" loading="lazy">
+            <div class="slide-scrim" aria-hidden="true"></div>
+            <div class="slide-copy">
+              <p class="eyebrow">Seminário</p>
+              <h2>Innovation Journey <span class="script">TCU</span></h2>
+              <p>Pequena descrição do que é o evento.</p>
+              <div class="slide-meta">
+                <span class="meta-chip">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="2"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>
+                  21 de setembro | 8h
+                </span>
+                <span class="meta-chip">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0112 2a7 7 0 017 7.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
+                  CESAR School - Prédio Brum - Sala 203
+                </span>
+              </div>
+              <div class="slide-actions">
+                <a class="btn btn-ghost btn-block" href="#calendario">Confira a agenda completa de eventos no CESAR</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="slide">
+            <img class="slide-bg" src="https://img.mailinblue.com/8183049/images/content_library/original/6aad47d5a292d5d687088c2c.png" alt="" loading="lazy">
+            <div class="slide-scrim" aria-hidden="true"></div>
+            <div class="slide-copy">
+              <p class="eyebrow">Reunião</p>
+              <h2>Estratégia <span class="script">& Integração</span></h2>
+              <p>Encontro de Lideranças do CESAR com sessões práticas sobre gestão estratégica, MNE, feedback e comunicação.</p>
+              <div class="slide-meta">
+                <span class="meta-chip">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="2"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>
+                  22 de setembro | 9h às 10h30
+                </span>
+                <span class="meta-chip">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0112 2a7 7 0 017 7.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
+                  CESAR Moinho - Manguezal
+                </span>
+              </div>
+              <div class="slide-actions">
+                <a class="btn btn-ghost btn-block" href="#calendario">Confira a agenda completa de eventos no CESAR</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="slide">
+            <img class="slide-bg" src="https://img.mailinblue.com/8183049/images/content_library/original/6aad45be39eb9ec809e7f782.png" alt="" loading="lazy">
+            <div class="slide-scrim" aria-hidden="true"></div>
+            <div class="slide-copy">
+              <p class="eyebrow">Seminário</p>
+              <h2>Innovation Journey <span class="script">TCU</span></h2>
+              <p>Pequena descrição do que é o evento.</p>
+              <div class="slide-meta">
+                <span class="meta-chip">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="2"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>
+                  24 e 25 de setembro | 8h
+                </span>
+                <span class="meta-chip">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0112 2a7 7 0 017 7.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
+                  CESAR Moinho - Sala Manguezal
+                </span>
+              </div>
+              <div class="slide-actions">
+                <a class="btn btn-ghost btn-block" href="#calendario">Confira a agenda completa de eventos no CESAR</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="slide">
+            <img class="slide-bg" src="https://img.mailinblue.com/8183049/images/content_library/original/6aad491ad84e8726718b9424.png" alt="" loading="lazy">
+            <div class="slide-scrim" aria-hidden="true"></div>
+            <div class="slide-copy">
+              <p class="eyebrow">Visita</p>
+              <h2>Petrobras RNEST <span class="script"></span></h2>
+              <p>Pequena descrição do que é o evento.</p>
+              <div class="slide-meta">
+                <span class="meta-chip">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="2"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>
+                  28 de setembro | 8h
+                </span>
+                <span class="meta-chip">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0112 2a7 7 0 017 7.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
+                  CESAR Moinho - Cartola
+                </span>
+              </div>
+              <div class="slide-actions">
+                <a class="btn btn-ghost btn-block" href="#calendario">Confira a agenda completa de eventos no CESAR</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="slide">
+            <img class="slide-bg" src="https://img.mailinblue.com/8183049/images/content_library/original/6aad49b07700a3e0da9a9724.png" alt="" loading="lazy">
+            <div class="slide-scrim" aria-hidden="true"></div>
+            <div class="slide-copy">
+              <p class="eyebrow">Cerimônia</p>
+              <h2>Encerramento Residência <span class="script">Tecnológica</span></h2>
+              <p>Pequena descrição do que é o evento.</p>
+              <div class="slide-meta">
+                <span class="meta-chip">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="2"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>
+                  29 de setembro | 19h
+                </span>
+                <span class="meta-chip">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0112 2a7 7 0 017 7.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
+                  CESAR Moinho - Sala Risoflora
                 </span>
               </div>
               <div class="slide-actions">
@@ -1322,6 +1431,23 @@ section { position: relative; scroll-margin-top: 96px; }
           <span class="chart-card-sub">Top 5 por nº de eventos</span>
         </div>
         <div class="rank-list" id="deptsRankList" role="list"></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-card-head">
+          <h3>Maiores solicitantes</h3>
+          <span class="chart-card-sub">Top 5 por nº de eventos, pelo campo Responsável</span>
+        </div>
+        <div class="rank-list" id="requestersRankList" role="list"></div>
+      </div>
+
+      <div class="chart-card chart-card-wide">
+        <div class="chart-card-head">
+          <h3>Público que participa</h3>
+          <span class="chart-card-sub">Proporção de eventos por público-alvo — área do bloco = quantidade</span>
+        </div>
+        <div class="treemap" id="publicoTreemap" role="img" aria-label="Mapa de árvore do público que participa dos eventos"></div>
+        <div class="treemap-legend" id="publicoLegend"></div>
       </div>
     </div>
 
@@ -1586,6 +1712,39 @@ function cleanLocationPart(v) {
   return s;
 }
 
+// As 3 categorias de Público mais frequentes na planilha (conferido nos
+// dados reais — "Interno + Cliente" é a maior, à frente de "Público
+// externo") ganham cor própria no gráfico de árvore; o resto entra em
+// "Outros". Normaliza variações de grafia (ex.: "Colaboadores", sem o r,
+// é o que está na planilha hoje) pro mesmo rótulo, sem depender de
+// digitação exata.
+function publicoCategoryKey(raw) {
+  const norm = (raw || '').trim().toLowerCase();
+  if (norm === 'interno + cliente') return 'Interno + Cliente';
+  if (norm === 'publico externo' || norm === 'público externo') return 'Público externo';
+  if (norm === 'colaboadores' || norm === 'colaboradores') return 'Colaboradores';
+  return null; // cai em "Outros"
+}
+
+// Mapa de árvore simples: divide o retângulo recursivamente, sempre pelo
+// lado mais comprido, dando ao maior item restante uma fatia proporcional
+// ao seu valor. `items` já vem ordenado do maior pro menor. Coordenadas em
+// porcentagem (0–100), então o resultado funciona em qualquer tamanho de
+// tela sem recalcular nada em CSS.
+function layoutTreemap(items, x, y, w, h) {
+  if (!items.length) return [];
+  if (items.length === 1) return [{ ...items[0], x, y, w, h }];
+  const total = items.reduce((sum, i) => sum + i.value, 0);
+  const [first, ...rest] = items;
+  const frac = total > 0 ? first.value / total : 0;
+  if (w >= h) {
+    const firstW = w * frac;
+    return [{ ...first, x, y, w: firstW, h }, ...layoutTreemap(rest, x + firstW, y, w - firstW, h)];
+  }
+  const firstH = h * frac;
+  return [{ ...first, x, y, w, h: firstH }, ...layoutTreemap(rest, x, y + firstH, w, h - firstH)];
+}
+
 // Extrai links de imagem da coluna "Galeria" — aceita qualquer jeito
 // de separar (vírgula, ponto e vírgula, quebra de linha, espaço),
 // já que é preenchido à mão. Pega qualquer texto que comece com
@@ -1657,6 +1816,8 @@ function mapRowToEvent(row, idx, rowIndex) {
     estrategico: /^true$/i.test(get('Estratégico')),
     location,
     venue,
+    publico,
+    responsavel,
     description,
   };
 }
@@ -2074,6 +2235,10 @@ function initDashboardPanel() {
     const monthMap = new Map();
     const venueMap = new Map();
     const categoryMap = new Map();
+    const requesterMap = new Map();
+    const publicoMap = new Map();
+    let publicoOutros = 0;
+    let publicoTotal = 0;
     let confirmadoCount = 0;
     let estrategicoCount = 0;
     let boardCount = 0;
@@ -2090,11 +2255,26 @@ function initDashboardPanel() {
       const category = String(ev.category || '').trim();
       if (category) categoryMap.set(category, (categoryMap.get(category) || 0) + 1);
 
+      const responsavel = String(ev.responsavel || '').trim();
+      if (responsavel) requesterMap.set(responsavel, (requesterMap.get(responsavel) || 0) + 1);
+
+      const publico = String(ev.publico || '').trim();
+      if (publico) {
+        publicoTotal++;
+        const key2 = publicoCategoryKey(publico);
+        if (key2) publicoMap.set(key2, (publicoMap.get(key2) || 0) + 1);
+        else publicoOutros++;
+      }
+
       if (ev.status === 'Confirmado') confirmadoCount++;
       if (ev.estrategico) estrategicoCount++;
       if (String(ev.cluster || '').trim() === 'Board') boardCount++;
       if (String(ev.esforco || '').trim() === 'Alto') altoEsforcoCount++;
     });
+
+    const publicoEntries = Array.from(publicoMap.entries());
+    if (publicoOutros > 0) publicoEntries.push(['Outros', publicoOutros]);
+    publicoEntries.sort((a, b) => b[1] - a[1]);
 
     const pct = (n) => (total ? (n / total) * 100 : 0);
     return {
@@ -2102,6 +2282,9 @@ function initDashboardPanel() {
       monthEntries: Array.from(monthMap.entries()).sort((a, b) => a[0].localeCompare(b[0])),
       venueEntries: Array.from(venueMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5),
       categoryEntries: Array.from(categoryMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5),
+      requesterEntries: Array.from(requesterMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5),
+      publicoEntries,
+      publicoTotal,
       confirmadoCount, confirmadoPct: pct(confirmadoCount),
       estrategicoCount, estrategicoPct: pct(estrategicoCount),
       boardCount, boardPct: pct(boardCount),
@@ -2197,6 +2380,77 @@ function initDashboardPanel() {
     });
   }
 
+  // Cor fixa por categoria de público (não por posição/ranking) — assim a
+  // cor de "Colaboradores" não muda de um refresh pro outro só porque
+  // passou a ter mais ou menos eventos que outra categoria.
+  const PUBLICO_SWATCHES = {
+    'Interno + Cliente': { fill: 'var(--treemap-1)', text: 'var(--ink)' },
+    'Público externo': { fill: 'var(--treemap-2)', text: 'var(--ink)' },
+    'Colaboradores': { fill: 'var(--treemap-3)', text: 'var(--ink)' },
+    'Outros': { fill: 'var(--treemap-other)', text: 'var(--off-white)' },
+  };
+
+  function renderTreemap(elId, legendId, entries, total) {
+    const wrap = document.getElementById(elId);
+    const legend = document.getElementById(legendId);
+    wrap.innerHTML = '';
+    legend.innerHTML = '';
+    if (!entries.length) {
+      wrap.innerHTML = '<p class="empty-note">Sem dados suficientes ainda.</p>';
+      return;
+    }
+
+    const items = entries.map(([name, value]) => ({ name, value }));
+    const layout = layoutTreemap(items, 0, 0, 100, 100);
+
+    layout.forEach((item) => {
+      const swatch = PUBLICO_SWATCHES[item.name] || PUBLICO_SWATCHES.Outros;
+      const pct = total ? Math.round((item.value / total) * 100) : 0;
+      const label = `${item.name}: ${item.value} eventos (${pct}%)`;
+
+      const cell = document.createElement('div');
+      cell.className = 'treemap-cell';
+      cell.style.left = `${item.x}%`;
+      cell.style.top = `${item.y}%`;
+      cell.style.width = `${item.w}%`;
+      cell.style.height = `${item.h}%`;
+      cell.style.background = swatch.fill;
+      cell.style.color = swatch.text;
+      cell.tabIndex = 0;
+      cell.setAttribute('aria-label', label);
+      cell.title = label;
+
+      const nameEl = document.createElement('span');
+      nameEl.className = 'treemap-cell-name';
+      nameEl.textContent = item.name;
+      const valueEl = document.createElement('span');
+      valueEl.className = 'treemap-cell-value';
+      valueEl.textContent = `${item.value} · ${pct}%`;
+      cell.append(nameEl, valueEl);
+      wrap.appendChild(cell);
+
+      const legendItem = document.createElement('span');
+      legendItem.className = 'treemap-legend-item';
+      const dot = document.createElement('span');
+      dot.className = 'treemap-legend-dot';
+      dot.style.background = swatch.fill;
+      dot.setAttribute('aria-hidden', 'true');
+      const textEl = document.createElement('span');
+      textEl.textContent = `${item.name} — ${item.value} (${pct}%)`;
+      legendItem.append(dot, textEl);
+      legend.appendChild(legendItem);
+    });
+
+    // some com o texto das células pequenas demais pra caber com folga —
+    // o valor continua acessível pela legenda e pelo aria-label/title
+    requestAnimationFrame(() => {
+      wrap.querySelectorAll('.treemap-cell').forEach((cell) => {
+        const tooSmall = cell.offsetWidth < 70 || cell.offsetHeight < 40;
+        cell.classList.toggle('is-compact', tooSmall);
+      });
+    });
+  }
+
   function renderStats(m) {
     setText('statTotal', m.total ? numberFmt.format(m.total) : '—');
     setText('statTotalCaption', m.total ? 'no calendário' : 'sem dados ainda');
@@ -2250,6 +2504,8 @@ function initDashboardPanel() {
     renderMonthChart(metrics.monthEntries);
     renderRankList('roomsRankList', metrics.venueEntries, 'eventos');
     renderRankList('deptsRankList', metrics.categoryEntries, 'eventos');
+    renderRankList('requestersRankList', metrics.requesterEntries, 'eventos');
+    renderTreemap('publicoTreemap', 'publicoLegend', metrics.publicoEntries, metrics.publicoTotal);
     renderNotice(noticeKind);
     lastUpdated = new Date();
     updateTimestampLabel();

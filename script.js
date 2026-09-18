@@ -161,6 +161,39 @@ function cleanLocationPart(v) {
   return s;
 }
 
+// As 3 categorias de Público mais frequentes na planilha (conferido nos
+// dados reais — "Interno + Cliente" é a maior, à frente de "Público
+// externo") ganham cor própria no gráfico de árvore; o resto entra em
+// "Outros". Normaliza variações de grafia (ex.: "Colaboadores", sem o r,
+// é o que está na planilha hoje) pro mesmo rótulo, sem depender de
+// digitação exata.
+function publicoCategoryKey(raw) {
+  const norm = (raw || '').trim().toLowerCase();
+  if (norm === 'interno + cliente') return 'Interno + Cliente';
+  if (norm === 'publico externo' || norm === 'público externo') return 'Público externo';
+  if (norm === 'colaboadores' || norm === 'colaboradores') return 'Colaboradores';
+  return null; // cai em "Outros"
+}
+
+// Mapa de árvore simples: divide o retângulo recursivamente, sempre pelo
+// lado mais comprido, dando ao maior item restante uma fatia proporcional
+// ao seu valor. `items` já vem ordenado do maior pro menor. Coordenadas em
+// porcentagem (0–100), então o resultado funciona em qualquer tamanho de
+// tela sem recalcular nada em CSS.
+function layoutTreemap(items, x, y, w, h) {
+  if (!items.length) return [];
+  if (items.length === 1) return [{ ...items[0], x, y, w, h }];
+  const total = items.reduce((sum, i) => sum + i.value, 0);
+  const [first, ...rest] = items;
+  const frac = total > 0 ? first.value / total : 0;
+  if (w >= h) {
+    const firstW = w * frac;
+    return [{ ...first, x, y, w: firstW, h }, ...layoutTreemap(rest, x + firstW, y, w - firstW, h)];
+  }
+  const firstH = h * frac;
+  return [{ ...first, x, y, w, h: firstH }, ...layoutTreemap(rest, x, y + firstH, w, h - firstH)];
+}
+
 // Extrai links de imagem da coluna "Galeria" — aceita qualquer jeito
 // de separar (vírgula, ponto e vírgula, quebra de linha, espaço),
 // já que é preenchido à mão. Pega qualquer texto que comece com
@@ -232,6 +265,8 @@ function mapRowToEvent(row, idx, rowIndex) {
     estrategico: /^true$/i.test(get('Estratégico')),
     location,
     venue,
+    publico,
+    responsavel,
     description,
   };
 }
@@ -649,6 +684,10 @@ function initDashboardPanel() {
     const monthMap = new Map();
     const venueMap = new Map();
     const categoryMap = new Map();
+    const requesterMap = new Map();
+    const publicoMap = new Map();
+    let publicoOutros = 0;
+    let publicoTotal = 0;
     let confirmadoCount = 0;
     let estrategicoCount = 0;
     let boardCount = 0;
@@ -665,11 +704,26 @@ function initDashboardPanel() {
       const category = String(ev.category || '').trim();
       if (category) categoryMap.set(category, (categoryMap.get(category) || 0) + 1);
 
+      const responsavel = String(ev.responsavel || '').trim();
+      if (responsavel) requesterMap.set(responsavel, (requesterMap.get(responsavel) || 0) + 1);
+
+      const publico = String(ev.publico || '').trim();
+      if (publico) {
+        publicoTotal++;
+        const key2 = publicoCategoryKey(publico);
+        if (key2) publicoMap.set(key2, (publicoMap.get(key2) || 0) + 1);
+        else publicoOutros++;
+      }
+
       if (ev.status === 'Confirmado') confirmadoCount++;
       if (ev.estrategico) estrategicoCount++;
       if (String(ev.cluster || '').trim() === 'Board') boardCount++;
       if (String(ev.esforco || '').trim() === 'Alto') altoEsforcoCount++;
     });
+
+    const publicoEntries = Array.from(publicoMap.entries());
+    if (publicoOutros > 0) publicoEntries.push(['Outros', publicoOutros]);
+    publicoEntries.sort((a, b) => b[1] - a[1]);
 
     const pct = (n) => (total ? (n / total) * 100 : 0);
     return {
@@ -677,6 +731,9 @@ function initDashboardPanel() {
       monthEntries: Array.from(monthMap.entries()).sort((a, b) => a[0].localeCompare(b[0])),
       venueEntries: Array.from(venueMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5),
       categoryEntries: Array.from(categoryMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5),
+      requesterEntries: Array.from(requesterMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5),
+      publicoEntries,
+      publicoTotal,
       confirmadoCount, confirmadoPct: pct(confirmadoCount),
       estrategicoCount, estrategicoPct: pct(estrategicoCount),
       boardCount, boardPct: pct(boardCount),
@@ -772,6 +829,77 @@ function initDashboardPanel() {
     });
   }
 
+  // Cor fixa por categoria de público (não por posição/ranking) — assim a
+  // cor de "Colaboradores" não muda de um refresh pro outro só porque
+  // passou a ter mais ou menos eventos que outra categoria.
+  const PUBLICO_SWATCHES = {
+    'Interno + Cliente': { fill: 'var(--treemap-1)', text: 'var(--ink)' },
+    'Público externo': { fill: 'var(--treemap-2)', text: 'var(--ink)' },
+    'Colaboradores': { fill: 'var(--treemap-3)', text: 'var(--ink)' },
+    'Outros': { fill: 'var(--treemap-other)', text: 'var(--off-white)' },
+  };
+
+  function renderTreemap(elId, legendId, entries, total) {
+    const wrap = document.getElementById(elId);
+    const legend = document.getElementById(legendId);
+    wrap.innerHTML = '';
+    legend.innerHTML = '';
+    if (!entries.length) {
+      wrap.innerHTML = '<p class="empty-note">Sem dados suficientes ainda.</p>';
+      return;
+    }
+
+    const items = entries.map(([name, value]) => ({ name, value }));
+    const layout = layoutTreemap(items, 0, 0, 100, 100);
+
+    layout.forEach((item) => {
+      const swatch = PUBLICO_SWATCHES[item.name] || PUBLICO_SWATCHES.Outros;
+      const pct = total ? Math.round((item.value / total) * 100) : 0;
+      const label = `${item.name}: ${item.value} eventos (${pct}%)`;
+
+      const cell = document.createElement('div');
+      cell.className = 'treemap-cell';
+      cell.style.left = `${item.x}%`;
+      cell.style.top = `${item.y}%`;
+      cell.style.width = `${item.w}%`;
+      cell.style.height = `${item.h}%`;
+      cell.style.background = swatch.fill;
+      cell.style.color = swatch.text;
+      cell.tabIndex = 0;
+      cell.setAttribute('aria-label', label);
+      cell.title = label;
+
+      const nameEl = document.createElement('span');
+      nameEl.className = 'treemap-cell-name';
+      nameEl.textContent = item.name;
+      const valueEl = document.createElement('span');
+      valueEl.className = 'treemap-cell-value';
+      valueEl.textContent = `${item.value} · ${pct}%`;
+      cell.append(nameEl, valueEl);
+      wrap.appendChild(cell);
+
+      const legendItem = document.createElement('span');
+      legendItem.className = 'treemap-legend-item';
+      const dot = document.createElement('span');
+      dot.className = 'treemap-legend-dot';
+      dot.style.background = swatch.fill;
+      dot.setAttribute('aria-hidden', 'true');
+      const textEl = document.createElement('span');
+      textEl.textContent = `${item.name} — ${item.value} (${pct}%)`;
+      legendItem.append(dot, textEl);
+      legend.appendChild(legendItem);
+    });
+
+    // some com o texto das células pequenas demais pra caber com folga —
+    // o valor continua acessível pela legenda e pelo aria-label/title
+    requestAnimationFrame(() => {
+      wrap.querySelectorAll('.treemap-cell').forEach((cell) => {
+        const tooSmall = cell.offsetWidth < 70 || cell.offsetHeight < 40;
+        cell.classList.toggle('is-compact', tooSmall);
+      });
+    });
+  }
+
   function renderStats(m) {
     setText('statTotal', m.total ? numberFmt.format(m.total) : '—');
     setText('statTotalCaption', m.total ? 'no calendário' : 'sem dados ainda');
@@ -825,6 +953,8 @@ function initDashboardPanel() {
     renderMonthChart(metrics.monthEntries);
     renderRankList('roomsRankList', metrics.venueEntries, 'eventos');
     renderRankList('deptsRankList', metrics.categoryEntries, 'eventos');
+    renderRankList('requestersRankList', metrics.requesterEntries, 'eventos');
+    renderTreemap('publicoTreemap', 'publicoLegend', metrics.publicoEntries, metrics.publicoTotal);
     renderNotice(noticeKind);
     lastUpdated = new Date();
     updateTimestampLabel();
