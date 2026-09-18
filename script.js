@@ -1075,34 +1075,7 @@ function initDashboardPanel() {
     updateTimestampLabel();
     refreshBtn.classList.remove('is-loading');
     refreshBtn.disabled = false;
-    syncPanelRowHeights();
   }
-
-  // A linha de baixo (Maiores solicitantes / Público que participa) precisa
-  // ficar com a mesma altura da linha de cima (Locais mais usados /
-  // Categorias mais frequentes), que agora varia de tamanho conforme o nº de
-  // prédios com eventos. CSS Grid não alinha altura entre linhas diferentes
-  // sozinho, então medimos a linha de cima depois do layout assentar e
-  // aplicamos como min-height na linha de baixo — só na largura em que as
-  // duas linhas ficam lado a lado (senão cada card empilha em largura cheia
-  // e não faz sentido igualar altura).
-  const panelRow1 = document.querySelector('.panel-charts-row-70-30');
-  const panelRow2 = document.querySelector('.panel-charts-row-50-50');
-  function syncPanelRowHeights() {
-    if (!panelRow1 || !panelRow2) return;
-    requestAnimationFrame(() => {
-      if (!window.matchMedia('(min-width: 700px)').matches) {
-        panelRow2.style.minHeight = '';
-        return;
-      }
-      panelRow2.style.minHeight = `${panelRow1.getBoundingClientRect().height}px`;
-    });
-  }
-  let resizeTimer;
-  window.addEventListener('resize', () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(syncPanelRowHeights, 150);
-  });
 
   return { render, setLoading };
 }

@@ -745,10 +745,11 @@ section { position: relative; scroll-margin-top: 96px; }
   grid-template-columns: 1fr;
   gap: var(--space-4);
 }
-@media (min-width: 700px) {
-  .panel-charts-row-70-30 { grid-template-columns: 7fr 3fr; }
-  .panel-charts-row-50-50 { grid-template-columns: 1fr 1fr; }
-}
+@media (min-width: 700px) { .panel-charts-row-70-30 { grid-template-columns: 7fr 3fr; } }
+
+.panel-charts-col { display: flex; flex-direction: column; gap: var(--space-4); }
+.panel-charts-col > .chart-card { flex: 1; display: flex; flex-direction: column; }
+.panel-charts-col > .chart-card > .rank-list { flex: 1; justify-content: center; }
 
 .chart-card {
   background: var(--bg);
@@ -863,7 +864,7 @@ section { position: relative; scroll-margin-top: 96px; }
 .treemap {
   position: relative;
   width: 100%;
-  aspect-ratio: 1.4 / 1;
+  aspect-ratio: 2.3 / 1;
   border-radius: var(--radius-sm);
   overflow: hidden;
 }
@@ -1102,8 +1103,8 @@ section { position: relative; scroll-margin-top: 96px; }
       <a href="#topo" class="is-active">Início</a>
       <a href="#calendario">Calendário</a>
       <a href="#galeria">Galeria</a>
-      <a href="#painel">Painel</a>
       <a href="#politica">Política</a>
+      <a href="#painel">Painel</a>
       <a href="#contato">Contato</a>
     </nav>
 
@@ -1128,8 +1129,8 @@ section { position: relative; scroll-margin-top: 96px; }
     <a href="#topo">Início</a>
     <a href="#calendario">Calendário</a>
     <a href="#galeria">Galeria</a>
-    <a href="#painel">Painel</a>
     <a href="#politica">Política</a>
+    <a href="#painel">Painel</a>
     <a href="#contato">Contato</a>
   </nav>
   <button class="btn btn-primary btn-block" type="button" data-open-request-form>Solicitar evento</button>
@@ -1412,8 +1413,50 @@ section { position: relative; scroll-margin-top: 96px; }
   </div>
 </dialog>
 
+<!-- ============================= POLÍTICA DE EVENTOS ============================= -->
+<section class="surface-section" id="politica">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Documento interno</p>
+        <h2>Política de Eventos</h2>
+        <p>Antes de organizar algo, identifique a categoria da sua iniciativa e siga o caminho indicado — evita atrasos, retrabalho e pedidos de última hora.</p>
+      </div>
+      <a class="btn btn-primary" href="documentos/Politica_Eventos_CESAR.pdf" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+        Abrir PDF completo
+      </a>
+    </div>
+
+    <div class="policy-grid">
+      <div class="chart-card policy-card">
+        <h3>Evento</h3>
+        <p>Tem público definido, intenção estratégica clara e representa o CESAR para além do seu time.</p>
+        <span class="policy-lead">Antecedência: 30 dias (60–90 se for grande porte)</span>
+      </div>
+      <div class="chart-card policy-card">
+        <h3>Iniciativa espontânea</h3>
+        <p>Acontece de maneira orgânica, dentro do seu time, sem representar o CESAR institucionalmente.</p>
+        <span class="policy-lead">Não precisa acionar a área de Eventos</span>
+      </div>
+      <div class="chart-card policy-card">
+        <h3>Ritual</h3>
+        <p>Encontro recorrente, com formato já consolidado, que fortalece a cultura e os vínculos do CESAR.</p>
+        <span class="policy-lead">Antecedência: 15–30 dias, se precisar de apoio</span>
+      </div>
+      <div class="chart-card policy-card">
+        <h3>Ação de endomarketing</h3>
+        <p>Ativação pro público interno, geralmente ligada a uma data do calendário.</p>
+        <span class="policy-lead">Antecedência mínima: 15 dias</span>
+      </div>
+    </div>
+
+    <p class="policy-footnote">Ainda não tem certeza da categoria? Fale com a Área de Eventos antes de começar a organizar — <a href="mailto:eventos@cesar.org.br">eventos@cesar.org.br</a> — ou <a href="documentos/Politica_Eventos_CESAR.pdf" target="_blank" rel="noopener">baixe o PDF completo</a> pra ver exemplos, prazos e o guia rápido de decisão.</p>
+  </div>
+</section>
+
 <!-- ============================= PAINEL DE INDICADORES ============================= -->
-<section class="surface-section" id="painel">
+<section class="surface-section alt" id="painel">
   <div class="container">
     <div class="section-head">
       <div>
@@ -1476,78 +1519,36 @@ section { position: relative; scroll-margin-top: 96px; }
           <div class="treemap-legend" id="roomsStackLegend"></div>
         </div>
 
-        <div class="chart-card">
-          <div class="chart-card-head">
-            <h3>Categorias mais frequentes</h3>
-            <span class="chart-card-sub">Top 5 por nº de eventos</span>
+        <div class="panel-charts-col">
+          <div class="chart-card">
+            <div class="chart-card-head">
+              <h3>Categorias mais frequentes</h3>
+              <span class="chart-card-sub">Top 5 por nº de eventos</span>
+            </div>
+            <div class="rank-list" id="deptsRankList" role="list"></div>
           </div>
-          <div class="rank-list" id="deptsRankList" role="list"></div>
+
+          <div class="chart-card">
+            <div class="chart-card-head">
+              <h3>Maiores solicitantes</h3>
+              <span class="chart-card-sub">Top 5 por nº de eventos, pelo campo Solicitante</span>
+            </div>
+            <div class="rank-list" id="requestersRankList" role="list"></div>
+          </div>
         </div>
       </div>
 
-      <div class="panel-charts-row panel-charts-row-50-50">
-        <div class="chart-card">
-          <div class="chart-card-head">
-            <h3>Maiores solicitantes</h3>
-            <span class="chart-card-sub">Top 5 por nº de eventos, pelo campo Solicitante</span>
-          </div>
-          <div class="rank-list" id="requestersRankList" role="list"></div>
+      <div class="chart-card chart-card-wide">
+        <div class="chart-card-head">
+          <h3>Público que participa</h3>
+          <span class="chart-card-sub">Proporção de eventos por público-alvo — área do bloco = quantidade</span>
         </div>
-
-        <div class="chart-card">
-          <div class="chart-card-head">
-            <h3>Público que participa</h3>
-            <span class="chart-card-sub">Proporção de eventos por público-alvo — área do bloco = quantidade</span>
-          </div>
-          <div class="treemap" id="publicoTreemap" role="img" aria-label="Mapa de árvore do público que participa dos eventos"></div>
-          <div class="treemap-legend" id="publicoLegend"></div>
-        </div>
+        <div class="treemap" id="publicoTreemap" role="img" aria-label="Mapa de árvore do público que participa dos eventos"></div>
+        <div class="treemap-legend" id="publicoLegend"></div>
       </div>
     </div>
 
     <p class="panel-updated" id="panelUpdated"></p>
-  </div>
-</section>
-
-<!-- ============================= POLÍTICA DE EVENTOS ============================= -->
-<section class="surface-section alt" id="politica">
-  <div class="container">
-    <div class="section-head">
-      <div>
-        <p class="eyebrow">Documento interno</p>
-        <h2>Política de Eventos</h2>
-        <p>Antes de organizar algo, identifique a categoria da sua iniciativa e siga o caminho indicado — evita atrasos, retrabalho e pedidos de última hora.</p>
-      </div>
-      <a class="btn btn-primary" href="documentos/Politica_Eventos_CESAR.pdf" target="_blank" rel="noopener">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
-        Abrir PDF completo
-      </a>
-    </div>
-
-    <div class="policy-grid">
-      <div class="chart-card policy-card">
-        <h3>Evento</h3>
-        <p>Tem público definido, intenção estratégica clara e representa o CESAR para além do seu time.</p>
-        <span class="policy-lead">Antecedência: 30 dias (60–90 se for grande porte)</span>
-      </div>
-      <div class="chart-card policy-card">
-        <h3>Iniciativa espontânea</h3>
-        <p>Acontece de maneira orgânica, dentro do seu time, sem representar o CESAR institucionalmente.</p>
-        <span class="policy-lead">Não precisa acionar a área de Eventos</span>
-      </div>
-      <div class="chart-card policy-card">
-        <h3>Ritual</h3>
-        <p>Encontro recorrente, com formato já consolidado, que fortalece a cultura e os vínculos do CESAR.</p>
-        <span class="policy-lead">Antecedência: 15–30 dias, se precisar de apoio</span>
-      </div>
-      <div class="chart-card policy-card">
-        <h3>Ação de endomarketing</h3>
-        <p>Ativação pro público interno, geralmente ligada a uma data do calendário.</p>
-        <span class="policy-lead">Antecedência mínima: 15 dias</span>
-      </div>
-    </div>
-
-    <p class="policy-footnote">Ainda não tem certeza da categoria? Fale com a Área de Eventos antes de começar a organizar — <a href="mailto:eventos@cesar.org.br">eventos@cesar.org.br</a> — ou <a href="documentos/Politica_Eventos_CESAR.pdf" target="_blank" rel="noopener">baixe o PDF completo</a> pra ver exemplos, prazos e o guia rápido de decisão.</p>
   </div>
 </section>
 
@@ -1583,8 +1584,8 @@ section { position: relative; scroll-margin-top: 96px; }
           <li><a href="#topo">Início</a></li>
           <li><a href="#calendario">Calendário</a></li>
           <li><a href="#galeria">Galeria</a></li>
-          <li><a href="#painel">Painel</a></li>
           <li><a href="#politica">Política de Eventos</a></li>
+          <li><a href="#painel">Painel</a></li>
         </ul>
       </div>
       <div class="footer-col">
@@ -2680,34 +2681,7 @@ function initDashboardPanel() {
     updateTimestampLabel();
     refreshBtn.classList.remove('is-loading');
     refreshBtn.disabled = false;
-    syncPanelRowHeights();
   }
-
-  // A linha de baixo (Maiores solicitantes / Público que participa) precisa
-  // ficar com a mesma altura da linha de cima (Locais mais usados /
-  // Categorias mais frequentes), que agora varia de tamanho conforme o nº de
-  // prédios com eventos. CSS Grid não alinha altura entre linhas diferentes
-  // sozinho, então medimos a linha de cima depois do layout assentar e
-  // aplicamos como min-height na linha de baixo — só na largura em que as
-  // duas linhas ficam lado a lado (senão cada card empilha em largura cheia
-  // e não faz sentido igualar altura).
-  const panelRow1 = document.querySelector('.panel-charts-row-70-30');
-  const panelRow2 = document.querySelector('.panel-charts-row-50-50');
-  function syncPanelRowHeights() {
-    if (!panelRow1 || !panelRow2) return;
-    requestAnimationFrame(() => {
-      if (!window.matchMedia('(min-width: 700px)').matches) {
-        panelRow2.style.minHeight = '';
-        return;
-      }
-      panelRow2.style.minHeight = `${panelRow1.getBoundingClientRect().height}px`;
-    });
-  }
-  let resizeTimer;
-  window.addEventListener('resize', () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(syncPanelRowHeights, 150);
-  });
 
   return { render, setLoading };
 }
