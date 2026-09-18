@@ -729,7 +729,7 @@ section { position: relative; scroll-margin-top: 96px; }
   gap: var(--space-4);
 }
 @media (min-width: 700px) {
-  .panel-charts-row-60-40 { grid-template-columns: 3fr 2fr; }
+  .panel-charts-row-70-30 { grid-template-columns: 7fr 3fr; }
   .panel-charts-row-50-50 { grid-template-columns: 1fr 1fr; }
 }
 
@@ -801,6 +801,46 @@ section { position: relative; scroll-margin-top: 96px; }
 .rank-bar-track { height: 10px; border-radius: var(--radius-pill); background: var(--bg-elev-2); overflow: hidden; }
 .rank-bar-fill { height: 100%; min-width: 4px; border-radius: var(--radius-pill); background: var(--orange); }
 .rank-value { font-size: 13px; font-weight: 700; color: var(--off-white); text-align: right; font-variant-numeric: tabular-nums; }
+
+/* barras empilhadas 100% — salas mais usadas dentro de cada prédio */
+.stackbar { display: flex; flex-direction: column; gap: var(--space-4); }
+.stackbar-row-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: 6px;
+}
+.stackbar-row-name { font-size: 13px; font-weight: 600; color: var(--off-white); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stackbar-row-total { font-size: 12px; color: var(--off-white-dim); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+.stackbar-track {
+  display: flex;
+  width: 100%;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.stackbar-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2%;
+  height: 100%;
+  border-right: 2px solid var(--bg);
+  cursor: default;
+  transition: filter var(--dur-fast) var(--ease-out);
+}
+.stackbar-seg:last-child { border-right: none; }
+.stackbar-seg:hover, .stackbar-seg:focus-visible { filter: brightness(1.1); }
+.stackbar-seg-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  padding-inline: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.stackbar-seg.is-compact .stackbar-seg-label { display: none; }
 
 /* mapa de árvore — público que participa dos eventos */
 .treemap {

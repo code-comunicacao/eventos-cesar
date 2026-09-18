@@ -746,7 +746,7 @@ section { position: relative; scroll-margin-top: 96px; }
   gap: var(--space-4);
 }
 @media (min-width: 700px) {
-  .panel-charts-row-60-40 { grid-template-columns: 3fr 2fr; }
+  .panel-charts-row-70-30 { grid-template-columns: 7fr 3fr; }
   .panel-charts-row-50-50 { grid-template-columns: 1fr 1fr; }
 }
 
@@ -818,6 +818,46 @@ section { position: relative; scroll-margin-top: 96px; }
 .rank-bar-track { height: 10px; border-radius: var(--radius-pill); background: var(--bg-elev-2); overflow: hidden; }
 .rank-bar-fill { height: 100%; min-width: 4px; border-radius: var(--radius-pill); background: var(--orange); }
 .rank-value { font-size: 13px; font-weight: 700; color: var(--off-white); text-align: right; font-variant-numeric: tabular-nums; }
+
+/* barras empilhadas 100% — salas mais usadas dentro de cada prédio */
+.stackbar { display: flex; flex-direction: column; gap: var(--space-4); }
+.stackbar-row-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: 6px;
+}
+.stackbar-row-name { font-size: 13px; font-weight: 600; color: var(--off-white); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stackbar-row-total { font-size: 12px; color: var(--off-white-dim); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+.stackbar-track {
+  display: flex;
+  width: 100%;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.stackbar-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2%;
+  height: 100%;
+  border-right: 2px solid var(--bg);
+  cursor: default;
+  transition: filter var(--dur-fast) var(--ease-out);
+}
+.stackbar-seg:last-child { border-right: none; }
+.stackbar-seg:hover, .stackbar-seg:focus-visible { filter: brightness(1.1); }
+.stackbar-seg-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  padding-inline: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.stackbar-seg.is-compact .stackbar-seg-label { display: none; }
 
 /* mapa de árvore — público que participa dos eventos */
 .treemap {
@@ -1426,13 +1466,14 @@ section { position: relative; scroll-margin-top: 96px; }
         <div class="bar-chart" id="monthBarChart"></div>
       </div>
 
-      <div class="panel-charts-row panel-charts-row-60-40">
+      <div class="panel-charts-row panel-charts-row-70-30">
         <div class="chart-card">
           <div class="chart-card-head">
             <h3>Locais mais usados</h3>
-            <span class="chart-card-sub">Top 5 salas por nº de eventos, dentro de cada local</span>
+            <span class="chart-card-sub">Salas mais usadas dentro de cada prédio — top 5 prédios, barras 100%</span>
           </div>
-          <div class="rank-list" id="roomsRankList" role="list"></div>
+          <div class="stackbar" id="roomsStackChart"></div>
+          <div class="treemap-legend" id="roomsStackLegend"></div>
         </div>
 
         <div class="chart-card">
@@ -1830,6 +1871,7 @@ function mapRowToEvent(row, idx, rowIndex) {
     estrategico: /^true$/i.test(get('Estratégico')),
     location,
     venue,
+    sala,
     publico,
     responsavel,
     solicitante,
@@ -2248,7 +2290,8 @@ function initDashboardPanel() {
   function computeMetrics(events) {
     const total = events.length;
     const monthMap = new Map();
-    const venueMap = new Map();
+    const buildingTotalMap = new Map();
+    const buildingSalaMap = new Map();
     const categoryMap = new Map();
     const requesterMap = new Map();
     const publicoMap = new Map();
@@ -2264,8 +2307,16 @@ function initDashboardPanel() {
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
       monthMap.set(key, (monthMap.get(key) || 0) + 1);
 
-      const room = String(ev.location || '').trim();
-      if (room) venueMap.set(room, (venueMap.get(room) || 0) + 1);
+      const building = String(ev.venue || '').trim();
+      const sala = String(ev.sala || '').trim();
+      if (building) {
+        buildingTotalMap.set(building, (buildingTotalMap.get(building) || 0) + 1);
+        if (sala) {
+          if (!buildingSalaMap.has(building)) buildingSalaMap.set(building, new Map());
+          const salaMap = buildingSalaMap.get(building);
+          salaMap.set(sala, (salaMap.get(sala) || 0) + 1);
+        }
+      }
 
       const category = String(ev.category || '').trim();
       if (category) categoryMap.set(category, (categoryMap.get(category) || 0) + 1);
@@ -2291,11 +2342,28 @@ function initDashboardPanel() {
     if (publicoOutros > 0) publicoEntries.push(['Outros', publicoOutros]);
     publicoEntries.sort((a, b) => b[1] - a[1]);
 
+    // Top 5 prédios por nº de eventos; dentro de cada um, as 3 salas mais
+    // usadas viram segmentos nomeados e o resto (salas menos frequentes +
+    // eventos sem sala definida) cai em "Outras salas" — assim a barra
+    // sempre soma 100% mesmo com nomes de sala digitados de forma livre.
+    const buildingEntries = Array.from(buildingTotalMap.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([building, buildingTotal]) => {
+        const salaMap = buildingSalaMap.get(building) || new Map();
+        const topSalas = Array.from(salaMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3);
+        const namedTotal = topSalas.reduce((sum, [, v]) => sum + v, 0);
+        const outros = buildingTotal - namedTotal;
+        const segments = topSalas.map(([name, value]) => ({ name, value }));
+        if (outros > 0) segments.push({ name: 'Outras salas', value: outros, isOther: true });
+        return { building, total: buildingTotal, segments };
+      });
+
     const pct = (n) => (total ? (n / total) * 100 : 0);
     return {
       total,
       monthEntries: Array.from(monthMap.entries()).sort((a, b) => a[0].localeCompare(b[0])),
-      venueEntries: Array.from(venueMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5),
+      buildingEntries,
       categoryEntries: Array.from(categoryMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5),
       requesterEntries: Array.from(requesterMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5),
       publicoEntries,
@@ -2392,6 +2460,92 @@ function initDashboardPanel() {
 
       row.append(nameEl, track, valueEl);
       wrap.appendChild(row);
+    });
+  }
+
+  // Aqui a cor é por RANKING dentro do prédio (sala mais usada / 2ª / 3ª /
+  // outras), não por identidade da sala — os nomes de sala variam livremente
+  // de prédio pra prédio (e têm bastante erro de digitação), então uma cor
+  // fixa por nome não faria sentido. O nome real de cada sala aparece no
+  // rótulo do segmento e no aria-label/title.
+  const ROOM_RANK_FILLS = ['var(--treemap-1)', 'var(--treemap-2)', 'var(--treemap-3)'];
+  const ROOM_OTHER_FILL = 'var(--treemap-other)';
+
+  function renderStackedBar(elId, legendId, buildingEntries) {
+    const wrap = document.getElementById(elId);
+    const legend = document.getElementById(legendId);
+    wrap.innerHTML = '';
+    if (legend) legend.innerHTML = '';
+    if (!buildingEntries.length) {
+      wrap.innerHTML = '<p class="empty-note">Sem dados suficientes ainda.</p>';
+      return;
+    }
+
+    buildingEntries.forEach(({ building, total, segments }) => {
+      const row = document.createElement('div');
+      row.className = 'stackbar-row';
+
+      const head = document.createElement('div');
+      head.className = 'stackbar-row-head';
+      const nameEl = document.createElement('span');
+      nameEl.className = 'stackbar-row-name';
+      nameEl.textContent = building;
+      const totalEl = document.createElement('span');
+      totalEl.className = 'stackbar-row-total';
+      totalEl.textContent = `${total} evento${total > 1 ? 's' : ''}`;
+      head.append(nameEl, totalEl);
+
+      const track = document.createElement('div');
+      track.className = 'stackbar-track';
+      segments.forEach((seg, i) => {
+        const pct = total ? Math.round((seg.value / total) * 100) : 0;
+        const segEl = document.createElement('span');
+        segEl.className = 'stackbar-seg';
+        segEl.style.width = `${pct}%`;
+        segEl.style.background = seg.isOther ? ROOM_OTHER_FILL : ROOM_RANK_FILLS[i];
+        segEl.style.color = seg.isOther ? 'var(--off-white)' : 'var(--ink)';
+        const label = `${seg.name}: ${seg.value} evento${seg.value > 1 ? 's' : ''} (${pct}%)`;
+        segEl.setAttribute('aria-label', label);
+        segEl.title = label;
+        segEl.tabIndex = 0;
+
+        const segLabel = document.createElement('span');
+        segLabel.className = 'stackbar-seg-label';
+        segLabel.textContent = `${seg.name} · ${pct}%`;
+        segEl.appendChild(segLabel);
+        track.appendChild(segEl);
+      });
+      row.append(head, track);
+      wrap.appendChild(row);
+    });
+
+    if (legend) {
+      const legendDefs = [
+        { label: 'Sala mais usada', fill: ROOM_RANK_FILLS[0] },
+        { label: '2ª mais usada', fill: ROOM_RANK_FILLS[1] },
+        { label: '3ª mais usada', fill: ROOM_RANK_FILLS[2] },
+        { label: 'Outras salas', fill: ROOM_OTHER_FILL },
+      ];
+      legendDefs.forEach(({ label, fill }) => {
+        const item = document.createElement('span');
+        item.className = 'treemap-legend-item';
+        const dot = document.createElement('span');
+        dot.className = 'treemap-legend-dot';
+        dot.style.background = fill;
+        dot.setAttribute('aria-hidden', 'true');
+        const textEl = document.createElement('span');
+        textEl.textContent = label;
+        item.append(dot, textEl);
+        legend.appendChild(item);
+      });
+    }
+
+    // some com o rótulo dos segmentos estreitos demais pra caber com folga —
+    // o valor continua acessível pelo aria-label/title
+    requestAnimationFrame(() => {
+      wrap.querySelectorAll('.stackbar-seg').forEach((seg) => {
+        seg.classList.toggle('is-compact', seg.offsetWidth < 56);
+      });
     });
   }
 
@@ -2517,7 +2671,7 @@ function initDashboardPanel() {
     const metrics = computeMetrics(events);
     renderStats(metrics);
     renderMonthChart(metrics.monthEntries);
-    renderRankList('roomsRankList', metrics.venueEntries, 'eventos');
+    renderStackedBar('roomsStackChart', 'roomsStackLegend', metrics.buildingEntries);
     renderRankList('deptsRankList', metrics.categoryEntries, 'eventos');
     renderRankList('requestersRankList', metrics.requesterEntries, 'eventos');
     renderTreemap('publicoTreemap', 'publicoLegend', metrics.publicoEntries, metrics.publicoTotal);
@@ -2526,7 +2680,34 @@ function initDashboardPanel() {
     updateTimestampLabel();
     refreshBtn.classList.remove('is-loading');
     refreshBtn.disabled = false;
+    syncPanelRowHeights();
   }
+
+  // A linha de baixo (Maiores solicitantes / Público que participa) precisa
+  // ficar com a mesma altura da linha de cima (Locais mais usados /
+  // Categorias mais frequentes), que agora varia de tamanho conforme o nº de
+  // prédios com eventos. CSS Grid não alinha altura entre linhas diferentes
+  // sozinho, então medimos a linha de cima depois do layout assentar e
+  // aplicamos como min-height na linha de baixo — só na largura em que as
+  // duas linhas ficam lado a lado (senão cada card empilha em largura cheia
+  // e não faz sentido igualar altura).
+  const panelRow1 = document.querySelector('.panel-charts-row-70-30');
+  const panelRow2 = document.querySelector('.panel-charts-row-50-50');
+  function syncPanelRowHeights() {
+    if (!panelRow1 || !panelRow2) return;
+    requestAnimationFrame(() => {
+      if (!window.matchMedia('(min-width: 700px)').matches) {
+        panelRow2.style.minHeight = '';
+        return;
+      }
+      panelRow2.style.minHeight = `${panelRow1.getBoundingClientRect().height}px`;
+    });
+  }
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(syncPanelRowHeights, 150);
+  });
 
   return { render, setLoading };
 }
