@@ -737,9 +737,18 @@ section { position: relative; scroll-margin-top: 96px; }
   grid-template-columns: 1fr;
   gap: var(--space-4);
 }
-@media (min-width: 700px) { .panel-charts { grid-template-columns: 1fr 1fr; } }
-@media (min-width: 1300px) { .panel-charts { grid-template-columns: repeat(3, 1fr); } }
 .chart-card-wide { grid-column: 1 / -1; }
+
+.panel-charts-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+}
+@media (min-width: 700px) {
+  .panel-charts-row-60-40 { grid-template-columns: 3fr 2fr; }
+  .panel-charts-row-50-50 { grid-template-columns: 1fr 1fr; }
+}
 
 .chart-card {
   background: var(--bg);
@@ -814,7 +823,7 @@ section { position: relative; scroll-margin-top: 96px; }
 .treemap {
   position: relative;
   width: 100%;
-  aspect-ratio: 2.3 / 1;
+  aspect-ratio: 1.4 / 1;
   border-radius: var(--radius-sm);
   overflow: hidden;
 }
@@ -1417,37 +1426,41 @@ section { position: relative; scroll-margin-top: 96px; }
         <div class="bar-chart" id="monthBarChart"></div>
       </div>
 
-      <div class="chart-card">
-        <div class="chart-card-head">
-          <h3>Locais mais usados</h3>
-          <span class="chart-card-sub">Top 5 por nº de eventos</span>
+      <div class="panel-charts-row panel-charts-row-60-40">
+        <div class="chart-card">
+          <div class="chart-card-head">
+            <h3>Locais mais usados</h3>
+            <span class="chart-card-sub">Top 5 salas por nº de eventos, dentro de cada local</span>
+          </div>
+          <div class="rank-list" id="roomsRankList" role="list"></div>
         </div>
-        <div class="rank-list" id="roomsRankList" role="list"></div>
+
+        <div class="chart-card">
+          <div class="chart-card-head">
+            <h3>Categorias mais frequentes</h3>
+            <span class="chart-card-sub">Top 5 por nº de eventos</span>
+          </div>
+          <div class="rank-list" id="deptsRankList" role="list"></div>
+        </div>
       </div>
 
-      <div class="chart-card">
-        <div class="chart-card-head">
-          <h3>Categorias mais frequentes</h3>
-          <span class="chart-card-sub">Top 5 por nº de eventos</span>
+      <div class="panel-charts-row panel-charts-row-50-50">
+        <div class="chart-card">
+          <div class="chart-card-head">
+            <h3>Maiores solicitantes</h3>
+            <span class="chart-card-sub">Top 5 por nº de eventos, pelo campo Solicitante</span>
+          </div>
+          <div class="rank-list" id="requestersRankList" role="list"></div>
         </div>
-        <div class="rank-list" id="deptsRankList" role="list"></div>
-      </div>
 
-      <div class="chart-card">
-        <div class="chart-card-head">
-          <h3>Maiores solicitantes</h3>
-          <span class="chart-card-sub">Top 5 por nº de eventos, pelo campo Responsável</span>
+        <div class="chart-card">
+          <div class="chart-card-head">
+            <h3>Público que participa</h3>
+            <span class="chart-card-sub">Proporção de eventos por público-alvo — área do bloco = quantidade</span>
+          </div>
+          <div class="treemap" id="publicoTreemap" role="img" aria-label="Mapa de árvore do público que participa dos eventos"></div>
+          <div class="treemap-legend" id="publicoLegend"></div>
         </div>
-        <div class="rank-list" id="requestersRankList" role="list"></div>
-      </div>
-
-      <div class="chart-card chart-card-wide">
-        <div class="chart-card-head">
-          <h3>Público que participa</h3>
-          <span class="chart-card-sub">Proporção de eventos por público-alvo — área do bloco = quantidade</span>
-        </div>
-        <div class="treemap" id="publicoTreemap" role="img" aria-label="Mapa de árvore do público que participa dos eventos"></div>
-        <div class="treemap-legend" id="publicoLegend"></div>
       </div>
     </div>
 
@@ -1767,7 +1780,7 @@ function findHeaderRowIndex(rows) {
 // Casa cada nome de coluna esperado pelo FIM do texto do cabeçalho
 // (não por igualdade exata) — pela mesma razão acima.
 function buildHeaderIndex(headerRow) {
-  const wanted = ['Status', 'Nº Zeev', 'Categoria', 'Evento', 'Horário', 'Início', 'Fim', 'Local', 'Sala', 'Tipo', 'Estratégico', 'Cluster', 'Público', 'Esforço', 'Responsável', 'Galeria'];
+  const wanted = ['Status', 'Nº Zeev', 'Categoria', 'Evento', 'Horário', 'Início', 'Fim', 'Local', 'Sala', 'Tipo', 'Estratégico', 'Cluster', 'Solicitante', 'Público', 'Esforço', 'Responsável', 'Galeria'];
   const idx = {};
   headerRow.forEach((cell, i) => {
     const c = (cell || '').trim().toLowerCase();
@@ -1795,6 +1808,7 @@ function mapRowToEvent(row, idx, rowIndex) {
 
   const publico = get('Público');
   const responsavel = get('Responsável');
+  const solicitante = get('Solicitante');
   const description = [
     publico ? `Público: ${publico}` : '',
     responsavel ? `Responsável: ${responsavel}` : '',
@@ -1818,6 +1832,7 @@ function mapRowToEvent(row, idx, rowIndex) {
     venue,
     publico,
     responsavel,
+    solicitante,
     description,
   };
 }
@@ -2249,14 +2264,14 @@ function initDashboardPanel() {
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
       monthMap.set(key, (monthMap.get(key) || 0) + 1);
 
-      const venue = String(ev.venue || '').trim();
-      if (venue) venueMap.set(venue, (venueMap.get(venue) || 0) + 1);
+      const room = String(ev.location || '').trim();
+      if (room) venueMap.set(room, (venueMap.get(room) || 0) + 1);
 
       const category = String(ev.category || '').trim();
       if (category) categoryMap.set(category, (categoryMap.get(category) || 0) + 1);
 
-      const responsavel = String(ev.responsavel || '').trim();
-      if (responsavel) requesterMap.set(responsavel, (requesterMap.get(responsavel) || 0) + 1);
+      const solicitante = String(ev.solicitante || '').trim();
+      if (solicitante) requesterMap.set(solicitante, (requesterMap.get(solicitante) || 0) + 1);
 
       const publico = String(ev.publico || '').trim();
       if (publico) {

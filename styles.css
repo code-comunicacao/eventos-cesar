@@ -720,9 +720,18 @@ section { position: relative; scroll-margin-top: 96px; }
   grid-template-columns: 1fr;
   gap: var(--space-4);
 }
-@media (min-width: 700px) { .panel-charts { grid-template-columns: 1fr 1fr; } }
-@media (min-width: 1300px) { .panel-charts { grid-template-columns: repeat(3, 1fr); } }
 .chart-card-wide { grid-column: 1 / -1; }
+
+.panel-charts-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+}
+@media (min-width: 700px) {
+  .panel-charts-row-60-40 { grid-template-columns: 3fr 2fr; }
+  .panel-charts-row-50-50 { grid-template-columns: 1fr 1fr; }
+}
 
 .chart-card {
   background: var(--bg);
@@ -797,7 +806,7 @@ section { position: relative; scroll-margin-top: 96px; }
 .treemap {
   position: relative;
   width: 100%;
-  aspect-ratio: 2.3 / 1;
+  aspect-ratio: 1.4 / 1;
   border-radius: var(--radius-sm);
   overflow: hidden;
 }

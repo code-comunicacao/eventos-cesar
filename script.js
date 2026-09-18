@@ -216,7 +216,7 @@ function findHeaderRowIndex(rows) {
 // Casa cada nome de coluna esperado pelo FIM do texto do cabeçalho
 // (não por igualdade exata) — pela mesma razão acima.
 function buildHeaderIndex(headerRow) {
-  const wanted = ['Status', 'Nº Zeev', 'Categoria', 'Evento', 'Horário', 'Início', 'Fim', 'Local', 'Sala', 'Tipo', 'Estratégico', 'Cluster', 'Público', 'Esforço', 'Responsável', 'Galeria'];
+  const wanted = ['Status', 'Nº Zeev', 'Categoria', 'Evento', 'Horário', 'Início', 'Fim', 'Local', 'Sala', 'Tipo', 'Estratégico', 'Cluster', 'Solicitante', 'Público', 'Esforço', 'Responsável', 'Galeria'];
   const idx = {};
   headerRow.forEach((cell, i) => {
     const c = (cell || '').trim().toLowerCase();
@@ -244,6 +244,7 @@ function mapRowToEvent(row, idx, rowIndex) {
 
   const publico = get('Público');
   const responsavel = get('Responsável');
+  const solicitante = get('Solicitante');
   const description = [
     publico ? `Público: ${publico}` : '',
     responsavel ? `Responsável: ${responsavel}` : '',
@@ -267,6 +268,7 @@ function mapRowToEvent(row, idx, rowIndex) {
     venue,
     publico,
     responsavel,
+    solicitante,
     description,
   };
 }
@@ -698,14 +700,14 @@ function initDashboardPanel() {
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
       monthMap.set(key, (monthMap.get(key) || 0) + 1);
 
-      const venue = String(ev.venue || '').trim();
-      if (venue) venueMap.set(venue, (venueMap.get(venue) || 0) + 1);
+      const room = String(ev.location || '').trim();
+      if (room) venueMap.set(room, (venueMap.get(room) || 0) + 1);
 
       const category = String(ev.category || '').trim();
       if (category) categoryMap.set(category, (categoryMap.get(category) || 0) + 1);
 
-      const responsavel = String(ev.responsavel || '').trim();
-      if (responsavel) requesterMap.set(responsavel, (requesterMap.get(responsavel) || 0) + 1);
+      const solicitante = String(ev.solicitante || '').trim();
+      if (solicitante) requesterMap.set(solicitante, (requesterMap.get(solicitante) || 0) + 1);
 
       const publico = String(ev.publico || '').trim();
       if (publico) {
