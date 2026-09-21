@@ -60,6 +60,7 @@ const GALLERY_DATA = [
   { year: 2025, title: 'Semana da Inovação', month: 'Setembro', icon: 'bulb', src:'https://img.mailinblue.com/8183049/images/content_library/original/6aa04f99722d1772cec86f72.jpeg' },
   { year: 2026, title: 'Workshop de Liderança', month: 'Setembro', icon: 'users', src:'https://img.mailinblue.com/8183049/images/content_library/original/6aa04cc9722d1772cec86ef7.jpeg' },
   { year: 2026, title: 'A Fronteira não é da Microsoft', month: 'Julho', icon: 'mic', src:'https://img.mailinblue.com/8183049/images/content_library/original/6aa04dbdda5ffecab0488235.png' },
+  { year: 2026, title: 'Guardião Cibernético', month: 'Setembro', icon: 'mic', src:'https://img.mailinblue.com/8183049/images/content_library/original/6ab139704997083910c4e4da.jpeg' },
 ];
 
 /* ---------------------------------------------------------
