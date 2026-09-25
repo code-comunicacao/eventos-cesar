@@ -52,12 +52,12 @@ const GALLERY_DATA = [
   { year: 2024, title: 'Tech Talk: Cloud', month: 'Agosto', icon: 'mic' },
   { year: 2024, title: 'Semana da Inovação', month: 'Setembro', icon: 'bulb' },
   { year: 2024, title: 'Workshop de Liderança', month: 'Junho', icon: 'users' },
-  { year: 2025, title: 'Confraternização de Fim de Ano', month: 'Dezembro', icon: 'confetti', src:'https://img.mailinblue.com/8183049/images/content_library/original/6aa04a34202ac0a13ea31faa.jpg' },
-  { year: 2025, title: 'Hackathon CESAR', month: 'Outubro', icon: 'trophy', src:'https://img.mailinblue.com/8183049/images/content_library/original/6aa0450e6e62f21c34cd490f.jpg' },
-  { year: 2025, title: 'Corrida CESAR', month: 'Novembro', icon: 'runner', src:'https://img.mailinblue.com/8183049/images/content_library/original/6aa04ed3722d1772cec86f4b.jpg' },
-  { year: 2025, title: 'Tech Talk: IA Generativa', month: 'Agosto', icon: 'mic', src:'https://img.mailinblue.com/8183049/images/content_library/original/6aa04f25722d1772cec86f52.jpg' },
-  { year: 2025, title: 'Onboarding Coletivo', month: 'Abril', icon: 'badge', src:'https://img.mailinblue.com/8183049/images/content_library/original/6aa04f4eda5ffecab0488283.png' },
-  { year: 2025, title: 'Semana da Inovação', month: 'Setembro', icon: 'bulb', src:'https://img.mailinblue.com/8183049/images/content_library/original/6aa04f99722d1772cec86f72.jpeg' },
+  { year: 2025, title: 'Confraternização de Fim de Ano', month: 'Dezembro', icon: 'confetti' },
+  { year: 2025, title: 'Hackathon CESAR', month: 'Outubro', icon: 'trophy' },
+  { year: 2025, title: 'Corrida CESAR', month: 'Novembro', icon: 'runner' },
+  { year: 2025, title: 'Tech Talk: IA Generativa', month: 'Agosto', icon: 'mic' },
+  { year: 2025, title: 'Onboarding Coletivo', month: 'Abril', icon: 'badge' },
+  { year: 2025, title: 'Semana da Inovação', month: 'Setembro', icon: 'bulb' },
   { year: 2026, title: 'Workshop de Liderança', month: 'Setembro', icon: 'users', src:'https://img.mailinblue.com/8183049/images/content_library/original/6aa04cc9722d1772cec86ef7.jpeg' },
 ];
 
