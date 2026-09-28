@@ -58,7 +58,6 @@ const GALLERY_DATA = [
   { year: 2025, title: 'Tech Talk: IA Generativa', month: 'Agosto', icon: 'mic' },
   { year: 2025, title: 'Onboarding Coletivo', month: 'Abril', icon: 'badge' },
   { year: 2025, title: 'Semana da Inovação', month: 'Setembro', icon: 'bulb' },
-  { year: 2026, title: 'Workshop de Liderança', month: 'Setembro', icon: 'users', src:'https://img.mailinblue.com/8183049/images/content_library/original/6aa04cc9722d1772cec86ef7.jpeg' },
 ];
 
 /* ---------------------------------------------------------
